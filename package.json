@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "name": "worklogger",
+  "version": "0.1.0",
+  "description": "Web application to manually log working hours",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valentin-nemcev/worklogger.git"
+  },
+  "author": "Valentin Nemcev <mail@valentin-nemcev.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/valentin-nemcev/worklogger/issues"
+  },
+  "homepage": "https://github.com/valentin-nemcev/worklogger#readme",
+  "devDependencies": {
+    "babel-loader": "^5.3.2",
+    "webpack": "^1.12.2",
+    "webpack-dev-server": "^1.12.0"
+  }
+}
