@@ -11,9 +11,9 @@ class Interval {
     this.startVar.init(tr, start);
     this.endVar.init(tr, end);
     this.tagVar.init(tr, tag);
-    return this
+    return this;
   }
-};
+}
 
 
 class IntervalView {
@@ -51,7 +51,7 @@ class IntervalView {
 
     return ch;
   }
-};
+}
 
 
 class IntervalListView {
@@ -78,14 +78,13 @@ class IntervalListView {
       .withOrigin(intervalList)
       .withDerived(this.intervalViewList)
       .withMapOrigin( (interval) => {
-        console.log(interval);
-        return new IntervalView();
+        return new IntervalView(interval);
       })
       .withOriginDerivedChannel(
         (interval, intervalView) => intervalView.createChannel(interval)
       );
   }
-};
+}
 
 
 const intervalList = new Transmitter.Nodes.List();
@@ -101,7 +100,6 @@ Transmitter.startTransmission( (tr) => {
       {start: '2015-10-15 20:50', end: '2015-10-15 21:00', tag: 'test1'});
 
   intervalList.init(tr, [i1, i2]);
-  console.log(intervalList.get());
   intervalListView.createChannel(intervalList).init(tr);
   intervalListView.init(tr);
 });
