@@ -66,9 +66,15 @@ export default class IntervalView {
 
   createChannel(interval) {
     const ch = new Transmitter.Channels.CompositeChannel();
+    ch.interval = interval;
+    ch.intervalView = this;
     ch.addChannel(this.showView.createChannel(interval));
     ch.addChannel(this.editView.createChannel(interval));
     return ch;
+  }
+
+  createRemoveChannel(intervalList) {
+    return this.editView.createRemoveChannel(intervalList, this.interval);
   }
 }
 
@@ -134,6 +140,11 @@ class IntervalEditView {
     el.appendChild(document.createTextNode(' '));
     this.tagEl = el.appendChild(document.createElement('input'));
     this.tagEl.type = 'text';
+    el.appendChild(document.createTextNode(' '));
+    this.removeEl = el.appendChild(document.createElement('button'));
+    this.removeEl.classList.add('remove-interval');
+    this.removeEl.type = 'button';
+    this.removeEl.innerText = '×';
 
     this.startElVar = new Transmitter.DOMElement.InputValueVar(this.startEl);
     this.endElVar = new Transmitter.DOMElement.InputValueVar(this.endEl);
@@ -141,6 +152,8 @@ class IntervalEditView {
 
     this.keydownEvt = new Transmitter.DOMElement.DOMEvent(el, 'keydown');
     this.completeEditEvt = new Transmitter.Nodes.RelayNode();
+    this.removeEvt =
+      new Transmitter.DOMElement.DOMEvent(this.removeEl, 'click');
   }
 
   init(tr) {
@@ -173,5 +186,15 @@ class IntervalEditView {
       .withDerived(this.tagElVar);
 
     return ch;
+  }
+
+  createRemoveChannel(intervalList, interval) {
+    return new Transmitter.Channels.SimpleChannel()
+      .inBackwardDirection()
+      .fromSource(this.removeEvt)
+      .toTarget(intervalList)
+      .withTransform( (removePayload) =>
+          removePayload.map( () => interval ).toRemoveListElement()
+      );
   }
 }
