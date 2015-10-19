@@ -109,11 +109,13 @@ class IntervalShowView {
     ch.defineVariableChannel()
       .inForwardDirection()
       .withOrigin(interval.startVar)
+      .withMapOrigin(interval.formatDatetime)
       .withDerived(this.startElVar);
 
     ch.defineVariableChannel()
       .inForwardDirection()
       .withOrigin(interval.endVar)
+      .withMapOrigin(interval.formatDatetime)
       .withDerived(this.endElVar);
 
     ch.defineVariableChannel()
@@ -175,11 +177,16 @@ class IntervalEditView {
 
     ch.defineVariableChannel()
       .withOrigin(interval.startVar)
-      .withDerived(this.startElVar);
+      .withMapOrigin(interval.formatDatetime)
+      .withDerived(this.startElVar)
+      .withMapDerived(interval.parseDatetime);
+
 
     ch.defineVariableChannel()
       .withOrigin(interval.endVar)
-      .withDerived(this.endElVar);
+      .withMapOrigin(interval.formatDatetime)
+      .withDerived(this.endElVar)
+      .withMapDerived(interval.parseDatetime);
 
     ch.defineVariableChannel()
       .withOrigin(interval.tagVar)
