@@ -1,87 +1,29 @@
 import Transmitter from 'transmitter-framework';
 
-let intervalLastDebugId = 0;
+export default {
+  createAddActionView(...args) {
+    return new CreateIntervalView(...args);
+  },
 
-export default class IntervalView {
-  inspect() {
-    return `[IntervalView ${this.debugId} for ${this.interval.inspect()}]`;
+  createShow(...args) {
+    return new IntervalShowView(...args);
+  },
+
+  createEdit(...args) {
+    return new IntervalEditView(...args);
   }
+};
 
-  constructor(interval) {
-    this.interval = interval;
 
-    this.debugId = intervalLastDebugId++;
-
+class CreateIntervalView {
+  constructor() {
     const el = this.element = document.createElement('div');
-    el.classList.add('interval');
+    el.classList.add('create-interval');
+    this.addButtonEl = el.appendChild(document.createElement('button'));
+    this.addButtonEl.innerText = 'Add interval';
 
-    this.showView = new IntervalShowView();
-    this.showViewIsHidden =
-      new Transmitter.DOMElement.AttributeVar(this.showView.element, 'hidden');
-
-    el.appendChild(this.showView.element);
-
-    this.editView = new IntervalEditView();
-    this.editViewIsHidden =
-      new Transmitter.DOMElement.AttributeVar(this.editView.element, 'hidden');
-
-    el.appendChild(this.editView.element);
-
-    this.isEditedVar = new Transmitter.Nodes.Variable();
-  }
-
-  init(tr) {
-    this.showView.init(tr);
-    this.editView.init(tr);
-    this._createIsEditedChannel().init(tr);
-    return this;
-  }
-
-  _createIsEditedChannel() {
-    const ch = new Transmitter.Channels.CompositeChannel();
-
-    ch.defineSimpleChannel()
-      .inBackwardDirection()
-      .fromSource(this.showView.startEditEvt)
-      .toTarget(this.isEditedVar)
-      .withTransform( (startEditPayload) =>
-          startEditPayload.map( () => true ) );
-
-    ch.defineSimpleChannel()
-      .inBackwardDirection()
-      .fromSource(this.editView.completeEditEvt)
-      .toTarget(this.isEditedVar)
-      .withTransform( (completeEditPayload) =>
-          completeEditPayload.map( () => false ) );
-
-    ch.defineSimpleChannel()
-      .inForwardDirection()
-      .fromSource(this.isEditedVar)
-      .toTarget(this.editViewIsHidden)
-      .withTransform( (isEditedPayload) =>
-          isEditedPayload.map( (isEdited) => !isEdited ) );
-
-    ch.defineSimpleChannel()
-      .inForwardDirection()
-      .fromSource(this.isEditedVar)
-      .toTarget(this.showViewIsHidden)
-      .withTransform( (isEditedPayload) =>
-          isEditedPayload.map( (isEdited) => isEdited ) );
-
-    return ch;
-  }
-
-  createChannel(interval) {
-    const ch = new Transmitter.Channels.CompositeChannel();
-    ch.interval = interval;
-    ch.intervalView = this;
-    ch.addChannel(this.showView.createChannel(interval));
-    ch.addChannel(this.editView.createChannel(interval));
-    return ch;
-  }
-
-  createRemoveChannel(intervalList) {
-    return this.editView.createRemoveChannel(intervalList, this.interval);
+    this.createItemEvt =
+      new Transmitter.DOMElement.DOMEvent(this.addButtonEl, 'click');
   }
 }
 
@@ -109,9 +51,6 @@ class IntervalShowView {
 
   createChannel(interval) {
     const ch = new Transmitter.Channels.CompositeChannel();
-
-    ch.interval = interval;
-    ch.intervalView = this;
 
     ch.defineVariableChannel()
       .inForwardDirection()

@@ -48,11 +48,11 @@ export default class IntervalListView {
         channel.interval == interval && channel.intervalView == intervalView
       );
 
-    ch.removeTodoChannelList = new Transmitter.ChannelNodes.ChannelList();
+    ch.removeIntervalChannelList = new Transmitter.ChannelNodes.ChannelList();
 
     ch.defineSimpleChannel()
       .fromSource(this.intervalViewList)
-      .toConnectionTarget(ch.removeTodoChannelList)
+      .toConnectionTarget(ch.removeIntervalChannelList)
       .withTransform( (intervalViewsPayload) =>
         intervalViewsPayload.map( (intervalView) =>
           intervalView.createRemoveChannel(intervalList) )

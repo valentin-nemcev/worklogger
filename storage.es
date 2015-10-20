@@ -114,7 +114,7 @@ export default class Storage {
       })
       .withDerived(ch.serializedVarList)
       .withMapDerived( (serializedVar) => {
-        const interval = intervalList.createInterval();
+        const interval = intervalList.createItem();
         serializedVar.interval = interval;
         return interval;
       })
