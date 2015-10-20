@@ -8,42 +8,9 @@ function parseJSONWithoutThrowing(str) {
   }
 }
 
-function createSerializedIntervalChannel(interval, serializedVar) {
-  const ch = new Transmitter.Channels.CompositeChannel();
-
-  ch.defineSimpleChannel()
-    .inForwardDirection()
-    .fromSources(interval.startVar, interval.endVar, interval.tagVar)
-    .toTarget(serializedVar)
-    .withTransform( ([payload, ...otherPayloads]) =>
-        payload.merge(...otherPayloads).map( ([start, end, tag]) =>
-          ({
-            start: interval.serializeDatetime(start),
-            end: interval.serializeDatetime(end),
-            tag
-          }))
-      );
-
-  ch.defineSimpleChannel()
-    .inBackwardDirection()
-    .fromSource(serializedVar)
-    .toTargets(interval.startVar, interval.endVar, interval.tagVar)
-    .withTransform( (payload) =>
-        payload.map( (serialized) => {
-          const {start, end, tag} = Object(serialized);
-          return [
-            interval.unserializeDatetime(start),
-            interval.unserializeDatetime(end),
-            tag
-          ];
-        }).separate()
-      );
-
-  return ch;
-}
-
 export default class Storage {
-  constructor(name) {
+  constructor(name, ItemStorage) {
+    this.ItemStorage = ItemStorage;
     this.localStorageVar =
       new Transmitter.Nodes.PropertyVariable(window.localStorage, name);
   }
@@ -52,7 +19,7 @@ export default class Storage {
     this.localStorageVar.originate(tr);
   }
 
-  createChannel(intervalList) {
+  createChannel(itemList) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
     ch.serializedVar = new Transmitter.Nodes.Variable();
@@ -106,23 +73,23 @@ export default class Storage {
           ch.serializedChannelForwardChannelVar);
 
     ch.defineListChannel()
-      .withOrigin(intervalList)
-      .withMapOrigin( (interval) => {
+      .withOrigin(itemList)
+      .withMapOrigin( (item) => {
         const v = new Transmitter.Nodes.Variable();
-        v.interval = interval;
+        v.item = item;
         return v;
       })
       .withDerived(ch.serializedVarList)
       .withMapDerived( (serializedVar) => {
-        const interval = intervalList.createItem();
-        serializedVar.interval = interval;
-        return interval;
+        const item = itemList.createItem();
+        serializedVar.item = item;
+        return item;
       })
-      .withMatchOriginDerived( (interval, serializedVar) =>
-          serializedVar.interval == interval
+      .withMatchOriginDerived( (item, serializedVar) =>
+          serializedVar.item == item
       )
-      .withOriginDerivedChannel( (interval, serializedVar) =>
-          createSerializedIntervalChannel(interval, serializedVar));
+      .withOriginDerivedChannel( (item, serializedVar) =>
+          this.ItemStorage.createSerializedItemChannel(item, serializedVar));
 
     return ch;
   }

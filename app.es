@@ -1,9 +1,11 @@
 import Transmitter from 'transmitter-framework';
 
-import Storage      from './storage.es';
+import Storage         from './storage.es';
+import DayStorage      from './day_storage.es';
+import IntervalStorage from './interval_storage.es';
 
-import Interval     from './interval.es';
-import Day          from './day.es';
+import Interval from './interval.es';
+import Day      from './day.es';
 
 import ListView     from './list_view.es';
 import IntervalView from './interval_view.es';
@@ -22,7 +24,8 @@ dayList.createItem = function () {
   return new Day();
 };
 
-const storage = new Storage('worklogger');
+const intervalStorage = new Storage('worklogger-intervals', IntervalStorage);
+const dayStorage = new Storage('worklogger-days', DayStorage);
 
 const intervalListView = new ListView(IntervalView);
 const dayListView = new ListView(DayView);
@@ -30,10 +33,15 @@ const dayListView = new ListView(DayView);
 Transmitter.Transmission.prototype.loggingIsEnabled = false;
 
 Transmitter.startTransmission( (tr) => {
-  storage.createChannel(intervalList).init(tr);
-  storage.load(tr);
+  intervalStorage.createChannel(intervalList).init(tr);
+  dayStorage.createChannel(dayList).init(tr);
+
+  intervalStorage.load(tr);
+  dayStorage.load(tr);
+
   intervalListView.createChannel(intervalList).init(tr);
   dayListView.createChannel(dayList).init(tr);
+
   intervalListView.init(tr);
   dayListView.init(tr);
 });
