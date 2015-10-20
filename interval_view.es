@@ -1,9 +1,16 @@
 import Transmitter from 'transmitter-framework';
 
+let intervalLastDebugId = 0;
 
 export default class IntervalView {
+  inspect() {
+    return `[IntervalView ${this.debugId} for ${this.interval.inspect()}]`;
+  }
+
   constructor(interval) {
     this.interval = interval;
+
+    this.debugId = intervalLastDebugId++;
 
     const el = this.element = document.createElement('div');
     el.classList.add('interval');
