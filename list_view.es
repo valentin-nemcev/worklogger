@@ -4,7 +4,7 @@ let itemLastDebugId = 0;
 
 class ItemView {
   inspect() {
-    return `[ItemView ${this.debugId} for ${this.interval.inspect()}]`;
+    return `[ItemView ${this.debugId} for ${this.item.inspect()}]`;
   }
 
   constructor(ItemViews, item) {
