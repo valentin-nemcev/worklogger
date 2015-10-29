@@ -7,9 +7,12 @@ module.exports = {
   module: {
     loaders: [
       {
-        test: /\.es$/,
-        exclude: /(node_modules)/,
-        loader: 'babel'
+        test: /\.(es|js)$/,
+        exclude: /node_modules\/(?!transmitter-framework)/,
+        loader: 'babel-loader',
+        query: {
+          optional: ['runtime', 'es7.exportExtensions', 'es7.classProperties'],
+        }
       }
     ]
   }

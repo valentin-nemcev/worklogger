@@ -18,12 +18,14 @@
   },
   "homepage": "https://github.com/valentin-nemcev/worklogger#readme",
   "devDependencies": {
+    "babel": "^5.8.29",
     "babel-loader": "^5.3.2",
+    "babel-runtime": "^5.8.29",
     "webpack": "^1.12.2",
     "webpack-dev-server": "^1.12.0"
   },
   "dependencies": {
     "moment": "^2.10.6",
-    "transmitter-framework": "^0.3.0"
+    "transmitter-framework": "^0.4.0"
   }
 }

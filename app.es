@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework';
+import Transmitter from 'transmitter-framework/index.es';
 
 import Storage         from './storage.es';
 import DayStorage      from './day_storage.es';

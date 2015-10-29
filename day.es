@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework';
+import Transmitter from 'transmitter-framework/index.es';
 import moment from 'moment';
 
 const dateFormat = 'YYYY-MM-DD';

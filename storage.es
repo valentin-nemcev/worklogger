@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework';
+import Transmitter from 'transmitter-framework/index.es';
 
 function parseJSONWithoutThrowing(str) {
   try {
