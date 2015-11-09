@@ -1,7 +1,7 @@
-import Transmitter from 'transmitter-framework';
+import Transmitter from 'transmitter-framework/index.es';
 
-import IntervalView from './interval_view.es';
-import CreateIntervalView from './create_interval_view.es';
+import IntervalView from './interval_view';
+import CreateIntervalView from './create_interval_view';
 
 
 export default class IntervalListView {

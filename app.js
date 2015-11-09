@@ -1,15 +1,15 @@
 import Transmitter from 'transmitter-framework/index.es';
 
-import Storage         from './storage.es';
-import DayStorage      from './day_storage.es';
-import IntervalStorage from './interval_storage.es';
+import Storage         from './storage';
+import DayStorage      from './day_storage';
+import IntervalStorage from './interval_storage';
 
-import Interval from './interval.es';
-import Day      from './day.es';
+import Interval from './interval';
+import Day      from './day';
 
-import ListView     from './list_view.es';
-import IntervalView from './interval_view.es';
-import DayView      from './day_view.es';
+import ListView     from './list_view';
+import IntervalView from './interval_view';
+import DayView      from './day_view';
 
 
 const intervalList = new Transmitter.Nodes.List();

@@ -1,5 +1,5 @@
 module.exports = {
-  entry: "./app.es",
+  entry: "./app.js",
   output: {
     path: __dirname,
     filename: "bundle.js"
@@ -7,7 +7,7 @@ module.exports = {
   module: {
     loaders: [
       {
-        test: /\.(es|js)$/,
+        test: /\.js$/,
         exclude: /node_modules\/(?!transmitter-framework)/,
         loader: 'babel-loader',
         query: {
