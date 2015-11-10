@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework/index.es';
+import * as Transmitter from 'transmitter-framework/index.es';
 
 let itemLastDebugId = 0;
 
@@ -17,17 +17,17 @@ class ItemView {
 
     this.showView = ItemViews.createShow();
     this.showViewIsHidden =
-      new Transmitter.DOMElement.AttributeVar(this.showView.element, 'hidden');
+      new Transmitter.DOMElement.AttributeValue(this.showView.element, 'hidden');
 
     el.appendChild(this.showView.element);
 
     this.editView = ItemViews.createEdit();
     this.editViewIsHidden =
-      new Transmitter.DOMElement.AttributeVar(this.editView.element, 'hidden');
+      new Transmitter.DOMElement.AttributeValue(this.editView.element, 'hidden');
 
     el.appendChild(this.editView.element);
 
-    this.isEditedVar = new Transmitter.Nodes.Variable();
+    this.isEditedValue = new Transmitter.Nodes.Value();
   }
 
   init(tr) {
@@ -43,27 +43,27 @@ class ItemView {
     ch.defineSimpleChannel()
       .inBackwardDirection()
       .fromSource(this.showView.startEditEvt)
-      .toTarget(this.isEditedVar)
+      .toTarget(this.isEditedValue)
       .withTransform( (startEditPayload) =>
           startEditPayload.map( () => true ) );
 
     ch.defineSimpleChannel()
       .inBackwardDirection()
       .fromSource(this.editView.completeEditEvt)
-      .toTarget(this.isEditedVar)
+      .toTarget(this.isEditedValue)
       .withTransform( (completeEditPayload) =>
           completeEditPayload.map( () => false ) );
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSource(this.isEditedVar)
+      .fromSource(this.isEditedValue)
       .toTarget(this.editViewIsHidden)
       .withTransform( (isEditedPayload) =>
           isEditedPayload.map( (isEdited) => !isEdited ) );
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSource(this.isEditedVar)
+      .fromSource(this.isEditedValue)
       .toTarget(this.showViewIsHidden)
       .withTransform( (isEditedPayload) =>
           isEditedPayload.map( (isEdited) => isEdited ) );
@@ -103,13 +103,12 @@ export default class ListView {
   }
 
   init(tr) {
-    new Transmitter.Channels.ListChannel()
+    new Transmitter.Channels.BidirectionalChannel()
       .inForwardDirection()
-      .withOrigin(this.itemViewList)
-      .withDerived(this.itemElementList)
-      .withMapOrigin( (itemView) => itemView.element )
+      .withOriginDerived(this.itemViewList, this.itemElementList)
       .withMatchOriginDerived(
         (itemView, itemEl) => itemView.element == itemEl )
+      .withMapOrigin( (itemView) => itemView.element )
       .init(tr);
     return this;
   }
@@ -117,25 +116,24 @@ export default class ListView {
   createChannel(itemList) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
-    ch.defineListChannel()
+    ch.defineNestedBidirectionalChannel()
       .inForwardDirection()
-      .withOrigin(itemList)
-      .withDerived(this.itemViewList)
-      .withMapOrigin( (item, tr) => new ItemView(this.ItemViews, item).init(tr) )
+      .withOriginDerived(itemList, this.itemViewList)
       .withMatchOriginDerived(
         (item, itemView) => itemView.item == item )
-      .withOriginDerivedChannel(
-        (item, itemView) => itemView.createChannel(item)
-      )
+      .withMapOrigin( (item, tr) => new ItemView(this.ItemViews, item).init(tr) )
       .withMatchOriginDerivedChannel( (item, itemView, channel) =>
         channel.item == item && channel.itemView == itemView
+      )
+      .withOriginDerivedChannel(
+        (item, itemView) => itemView.createChannel(item)
       );
 
     ch.removeItemChannelList = new Transmitter.ChannelNodes.ChannelList();
 
-    ch.defineSimpleChannel()
+    ch.defineNestedSimpleChannel()
       .fromSource(this.itemViewList)
-      .toConnectionTarget(ch.removeItemChannelList)
+      .toChannelTarget(ch.removeItemChannelList)
       .withTransform( (itemViewsPayload) =>
         itemViewsPayload.map( (itemView) =>
           itemView.createRemoveChannel(itemList) )
@@ -146,9 +144,9 @@ export default class ListView {
       .fromSource(this.createItemView.createItemEvt)
       .toTarget(itemList)
       .withTransform( (createItemPayload, tr) =>
-          createItemPayload
+        createItemPayload
           .map( () => itemList.createItem().init(tr) )
-          .toAppendListElement()
+          .toAppendElementAction()
       );
 
     return ch;

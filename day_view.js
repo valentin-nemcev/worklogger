@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework/index.es';
+import * as Transmitter from 'transmitter-framework/index.es';
 
 export default {
   createAddActionView(...args) {
@@ -36,8 +36,8 @@ class DayShowView {
     el.appendChild(document.createTextNode(' '));
     this.targetEl = el.appendChild(document.createElement('span'));
 
-    this.dateElVar = new Transmitter.DOMElement.TextVar(this.dateEl);
-    this.targetElVar = new Transmitter.DOMElement.TextVar(this.targetEl);
+    this.dateElValue = new Transmitter.DOMElement.TextValue(this.dateEl);
+    this.targetElValue = new Transmitter.DOMElement.TextValue(this.targetEl);
 
     this.startEditEvt = new Transmitter.DOMElement.DOMEvent(el, 'dblclick');
   }
@@ -49,16 +49,14 @@ class DayShowView {
   createChannel(day) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
-    ch.defineVariableChannel()
+    ch.defineBidirectionalChannel()
       .inForwardDirection()
-      .withOrigin(day.dateVar)
-      .withMapOrigin(day.formatDate)
-      .withDerived(this.dateElVar);
+      .withOriginDerived(day.dateValue, this.dateElValue)
+      .withMapOrigin(day.formatDate);
 
-    ch.defineVariableChannel()
+    ch.defineBidirectionalChannel()
       .inForwardDirection()
-      .withOrigin(day.targetVar)
-      .withDerived(this.targetElVar);
+      .withOriginDerived(day.targetValue, this.targetElValue);
 
     return ch;
   }
@@ -81,8 +79,8 @@ class DayEditView {
     this.removeEl.type = 'button';
     this.removeEl.innerText = '×';
 
-    this.dateElVar = new Transmitter.DOMElement.InputValueVar(this.dateEl);
-    this.targetElVar = new Transmitter.DOMElement.InputValueVar(this.targetEl);
+    this.dateElValue = new Transmitter.DOMElement.InputValue(this.dateEl);
+    this.targetElValue = new Transmitter.DOMElement.InputValue(this.targetEl);
 
     this.keydownEvt = new Transmitter.DOMElement.DOMEvent(el, 'keydown');
     this.completeEditEvt = new Transmitter.Nodes.RelayNode();
@@ -107,15 +105,13 @@ class DayEditView {
   createChannel(day) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
-    ch.defineVariableChannel()
-      .withOrigin(day.dateVar)
+    ch.defineBidirectionalChannel()
+      .withOriginDerived(day.dateValue, this.dateElValue)
       .withMapOrigin(day.formatDate)
-      .withDerived(this.dateElVar)
       .withMapDerived(day.parseDate);
 
-    ch.defineVariableChannel()
-      .withOrigin(day.targetVar)
-      .withDerived(this.targetElVar);
+    ch.defineBidirectionalChannel()
+      .withOriginDerived(day.targetValue, this.targetElValue);
 
     return ch;
   }
@@ -126,7 +122,7 @@ class DayEditView {
       .fromSource(this.removeEvt)
       .toTarget(dayList)
       .withTransform( (removePayload) =>
-          removePayload.map( () => day ).toRemoveListElement()
+          removePayload.map( () => day ).toRemoveElementAction()
       );
   }
 }

@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework/index.es';
+import * as Transmitter from 'transmitter-framework/index.es';
 
 function parseJSONWithoutThrowing(str) {
   try {
@@ -11,85 +11,63 @@ function parseJSONWithoutThrowing(str) {
 export default class Storage {
   constructor(name, ItemStorage) {
     this.ItemStorage = ItemStorage;
-    this.localStorageVar =
-      new Transmitter.Nodes.PropertyVariable(window.localStorage, name);
+    this.localStorageValue =
+      new Transmitter.Nodes.PropertyValue(window.localStorage, name);
   }
 
   load(tr) {
-    this.localStorageVar.originate(tr);
+    this.localStorageValue.originate(tr);
   }
 
   createChannel(itemList) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
-    ch.serializedVar = new Transmitter.Nodes.Variable();
+    ch.serializedList = new Transmitter.Nodes.List();
 
-    ch.defineVariableChannel()
-      .withOrigin(ch.serializedVar)
-      .withMapOrigin(JSON.stringify)
-      .withDerived(this.localStorageVar)
-      .withMapDerived( (json) => Array.from(parseJSONWithoutThrowing(json)) );
+    ch.defineBidirectionalChannel()
+      .withOriginDerived(ch.serializedList, this.localStorageValue)
+      .withTransformOrigin(
+        (payload) => payload.toValue().map(JSON.stringify)
+      )
+      .withTransformDerived(
+        (payload) => payload.map(parseJSONWithoutThrowing).toList()
+      );
 
-    ch.serializedVarList = new Transmitter.Nodes.List();
+    ch.serializedValueList = new Transmitter.Nodes.List();
 
     ch.defineSimpleChannel()
       .inBackwardDirection()
-      .fromSource(ch.serializedVar)
-      .toTarget(ch.serializedVarList)
+      .fromSource(ch.serializedList)
+      .toTarget(ch.serializedValueList)
       .withTransform( (localStoragePayload) =>
         localStoragePayload
-          .toSetList()
           .updateMatching(
-            () => new Transmitter.Nodes.Variable(),
+            () => new Transmitter.Nodes.Value(),
             () => true
           )
       );
 
-    ch.serializedChannelForwardChannelVar =
-      new Transmitter.ChannelNodes.DynamicChannelVariable('sources', () =>
-        new Transmitter.Channels.SimpleChannel()
-          .inForwardDirection()
-          .toTarget(ch.serializedVar)
-          .withTransform( (serializedPayloads) =>
-            serializedPayloads.flatten() )
-      );
+    ch.defineFlatteningChannel()
+      .withNested(ch.serializedValueList)
+      .withFlat(ch.serializedList);
 
-    ch.serializedChannelBackwardChannelVar =
-      new Transmitter.ChannelNodes.DynamicChannelVariable('targets', () =>
-        new Transmitter.Channels.SimpleChannel()
-          .inBackwardDirection()
-          .fromSource(ch.serializedVar)
-          .withTransform( (serializedPayload) =>
-            serializedPayload
-              .toSetList()
-              .unflatten()
-          )
-      );
-
-    ch.defineSimpleChannel()
-      .fromSource(ch.serializedVarList)
-      .toConnectionTargets(
-          ch.serializedChannelBackwardChannelVar,
-          ch.serializedChannelForwardChannelVar);
-
-    ch.defineListChannel()
-      .withOrigin(itemList)
+    ch.defineNestedBidirectionalChannel()
+      .withOriginDerived(itemList, ch.serializedValueList)
+      .withMatchOriginDerived( (item, serializedValue) =>
+          serializedValue.item == item
+      )
       .withMapOrigin( (item) => {
-        const v = new Transmitter.Nodes.Variable();
+        const v = new Transmitter.Nodes.Value();
         v.item = item;
         return v;
       })
-      .withDerived(ch.serializedVarList)
-      .withMapDerived( (serializedVar) => {
+      .withMapDerived( (serializedValue) => {
         const item = itemList.createItem();
-        serializedVar.item = item;
+        serializedValue.item = item;
         return item;
       })
-      .withMatchOriginDerived( (item, serializedVar) =>
-          serializedVar.item == item
-      )
-      .withOriginDerivedChannel( (item, serializedVar) =>
-          this.ItemStorage.createSerializedItemChannel(item, serializedVar));
+      .withOriginDerivedChannel( (item, serializedValue) =>
+          this.ItemStorage.createSerializedItemChannel(item, serializedValue));
 
     return ch;
   }

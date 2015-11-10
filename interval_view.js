@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework/index.es';
+import * as Transmitter from 'transmitter-framework/index.es';
 
 export default {
   createAddActionView(...args) {
@@ -38,9 +38,9 @@ class IntervalShowView {
     el.appendChild(document.createTextNode(' '));
     this.tagEl = el.appendChild(document.createElement('span'));
 
-    this.startElVar = new Transmitter.DOMElement.TextVar(this.startEl);
-    this.endElVar = new Transmitter.DOMElement.TextVar(this.endEl);
-    this.tagElVar = new Transmitter.DOMElement.TextVar(this.tagEl);
+    this.startElValue = new Transmitter.DOMElement.TextValue(this.startEl);
+    this.endElValue = new Transmitter.DOMElement.TextValue(this.endEl);
+    this.tagElValue = new Transmitter.DOMElement.TextValue(this.tagEl);
 
     this.startEditEvt = new Transmitter.DOMElement.DOMEvent(el, 'dblclick');
   }
@@ -52,22 +52,19 @@ class IntervalShowView {
   createChannel(interval) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
-    ch.defineVariableChannel()
+    ch.defineBidirectionalChannel()
       .inForwardDirection()
-      .withOrigin(interval.startVar)
-      .withMapOrigin(interval.formatDatetime)
-      .withDerived(this.startElVar);
+      .withOriginDerived(interval.startValue, this.startElValue)
+      .withMapOrigin(interval.formatDatetime);
 
-    ch.defineVariableChannel()
+    ch.defineBidirectionalChannel()
       .inForwardDirection()
-      .withOrigin(interval.endVar)
-      .withMapOrigin(interval.formatDatetime)
-      .withDerived(this.endElVar);
+      .withOriginDerived(interval.endValue, this.endElValue)
+      .withMapOrigin(interval.formatDatetime);
 
-    ch.defineVariableChannel()
+    ch.defineBidirectionalChannel()
       .inForwardDirection()
-      .withOrigin(interval.tagVar)
-      .withDerived(this.tagElVar);
+      .withOriginDerived(interval.tagValue, this.tagElValue);
 
     return ch;
   }
@@ -94,9 +91,9 @@ class IntervalEditView {
     this.removeEl.type = 'button';
     this.removeEl.innerText = '×';
 
-    this.startElVar = new Transmitter.DOMElement.InputValueVar(this.startEl);
-    this.endElVar = new Transmitter.DOMElement.InputValueVar(this.endEl);
-    this.tagElVar = new Transmitter.DOMElement.InputValueVar(this.tagEl);
+    this.startElValue = new Transmitter.DOMElement.InputValue(this.startEl);
+    this.endElValue = new Transmitter.DOMElement.InputValue(this.endEl);
+    this.tagElValue = new Transmitter.DOMElement.InputValue(this.tagEl);
 
     this.keydownEvt = new Transmitter.DOMElement.DOMEvent(el, 'keydown');
     this.completeEditEvt = new Transmitter.Nodes.RelayNode();
@@ -121,22 +118,19 @@ class IntervalEditView {
   createChannel(interval) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
-    ch.defineVariableChannel()
-      .withOrigin(interval.startVar)
+    ch.defineBidirectionalChannel()
+      .withOriginDerived(interval.startValue, this.startElValue)
       .withMapOrigin(interval.formatDatetime)
-      .withDerived(this.startElVar)
       .withMapDerived(interval.parseDatetime);
 
 
-    ch.defineVariableChannel()
-      .withOrigin(interval.endVar)
+    ch.defineBidirectionalChannel()
+      .withOriginDerived(interval.endValue, this.endElValue)
       .withMapOrigin(interval.formatDatetime)
-      .withDerived(this.endElVar)
       .withMapDerived(interval.parseDatetime);
 
-    ch.defineVariableChannel()
-      .withOrigin(interval.tagVar)
-      .withDerived(this.tagElVar);
+    ch.defineBidirectionalChannel()
+      .withOriginDerived(interval.tagValue, this.tagElValue);
 
     return ch;
   }
@@ -147,7 +141,7 @@ class IntervalEditView {
       .fromSource(this.removeEvt)
       .toTarget(intervalList)
       .withTransform( (removePayload) =>
-          removePayload.map( () => interval ).toRemoveListElement()
+          removePayload.map( () => interval ).toRemoveElementAction()
       );
   }
 }

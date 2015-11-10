@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework/index.es';
+import * as Transmitter from 'transmitter-framework/index.es';
 import moment from 'moment';
 
 const dateFormat = 'YYYY-MM-DD';
@@ -30,14 +30,15 @@ export default class Day {
 
   constructor() {
     this.debugId = dayLastDebugId++;
-    this.dateVar = new Transmitter.Nodes.Variable();
-    this.targetVar = new Transmitter.Nodes.Variable();
+    this.dateValue = new Transmitter.Nodes.Value();
+    this.targetValue = new Transmitter.Nodes.Value();
   }
 
   init(tr, {date, target = 0} = {}) {
+    console.log(...arguments);
     date = this.parseDate(date);
-    this.dateVar.init(tr, date);
-    this.targetVar.init(tr, target);
+    this.dateValue.set(date).init(tr);
+    this.targetValue.set(target).init(tr);
     return this;
   }
 }

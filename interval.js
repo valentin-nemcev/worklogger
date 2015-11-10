@@ -1,4 +1,4 @@
-import Transmitter from 'transmitter-framework/index.es';
+import * as Transmitter from 'transmitter-framework/index.es';
 import moment from 'moment';
 
 Object.assign(moment.fn, {
@@ -34,17 +34,17 @@ export default class Interval {
 
   constructor() {
     this.debugId = intervalLastDebugId++;
-    this.startVar = new Transmitter.Nodes.Variable();
-    this.endVar = new Transmitter.Nodes.Variable();
-    this.tagVar = new Transmitter.Nodes.Variable();
+    this.startValue = new Transmitter.Nodes.Value();
+    this.endValue = new Transmitter.Nodes.Value();
+    this.tagValue = new Transmitter.Nodes.Value();
   }
 
   init(tr, {start, end, tag = null} = {}) {
     start = this.parseDatetime(start);
     end = this.parseDatetime(end);
-    this.startVar.init(tr, start);
-    this.endVar.init(tr, end);
-    this.tagVar.init(tr, tag);
+    this.startValue.set(start).init(tr);
+    this.endValue.set(end).init(tr);
+    this.tagValue.set(tag).init(tr);
     return this;
   }
 }

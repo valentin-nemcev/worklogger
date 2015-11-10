@@ -1,14 +1,14 @@
-import Transmitter from 'transmitter-framework/index.es';
+import * as Transmitter from 'transmitter-framework/index.es';
 
 
 export default {
-  createSerializedItemChannel(interval, serializedVar) {
+  createSerializedItemChannel(interval, serializedValue) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSources(interval.startVar, interval.endVar, interval.tagVar)
-      .toTarget(serializedVar)
+      .fromSources(interval.startValue, interval.endValue, interval.tagValue)
+      .toTarget(serializedValue)
       .withTransform( ([payload, ...otherPayloads]) =>
           payload.merge(...otherPayloads).map( ([start, end, tag]) =>
             ({
@@ -20,8 +20,8 @@ export default {
 
     ch.defineSimpleChannel()
       .inBackwardDirection()
-      .fromSource(serializedVar)
-      .toTargets(interval.startVar, interval.endVar, interval.tagVar)
+      .fromSource(serializedValue)
+      .toTargets(interval.startValue, interval.endValue, interval.tagValue)
       .withTransform( (payload) =>
           payload.map( (serialized) => {
             const {start, end, tag} = Object(serialized);
