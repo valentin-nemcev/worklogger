@@ -19,8 +19,10 @@
   "homepage": "https://github.com/valentin-nemcev/worklogger#readme",
   "devDependencies": {
     "babel": "^5.8.29",
+    "babel-eslint": "^4.1.5",
     "babel-loader": "^5.3.2",
     "babel-runtime": "^5.8.29",
+    "eslint": "^1.9.0",
     "webpack": "^1.12.2",
     "webpack-dev-server": "^1.12.0"
   },
