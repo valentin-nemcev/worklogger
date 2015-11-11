@@ -35,7 +35,6 @@ export default class Day {
   }
 
   init(tr, {date, target = 0} = {}) {
-    console.log(...arguments);
     date = this.parseDate(date);
     this.dateValue.set(date).init(tr);
     this.targetValue.set(target).init(tr);
