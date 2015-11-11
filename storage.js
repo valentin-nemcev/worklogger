@@ -48,7 +48,7 @@ export default class Storage {
       );
 
     ch.defineFlatteningChannel()
-      .withNested(ch.serializedValueList)
+      .withNestedAsOrigin(ch.serializedValueList)
       .withFlat(ch.serializedList);
 
     ch.defineNestedBidirectionalChannel()
