@@ -19,7 +19,7 @@ export default class Storage {
     this.localStorageValue.originate(tr);
   }
 
-  createChannel(itemList) {
+  createChannel(items) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
     ch.serializedList = new Transmitter.Nodes.List();
@@ -52,7 +52,7 @@ export default class Storage {
       .withFlat(ch.serializedList);
 
     ch.defineNestedBidirectionalChannel()
-      .withOriginDerived(itemList, ch.serializedValueList)
+      .withOriginDerived(items.list, ch.serializedValueList)
       .withMatchOriginDerived( (item, serializedValue) =>
           serializedValue.item == item
       )
@@ -62,7 +62,7 @@ export default class Storage {
         return v;
       })
       .withMapDerived( (serializedValue) => {
-        const item = itemList.createItem();
+        const item = items.createItem();
         serializedValue.item = item;
         return item;
       })

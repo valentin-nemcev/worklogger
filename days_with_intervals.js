@@ -6,12 +6,12 @@ export default class DaysWithIntervals {
     this.list = new Transmitter.Nodes.List();
   }
 
-  createChannel(dayList) {
+  createChannel(days) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSource(dayList)
+      .fromSource(days.list)
       .toTarget(this.list)
       .withTransform(
         (payload) => payload.updateMatching(

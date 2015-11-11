@@ -113,12 +113,12 @@ export default class ListView {
     return this;
   }
 
-  createChannel(itemList) {
+  createChannel(items) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
     ch.defineNestedBidirectionalChannel()
       .inForwardDirection()
-      .withOriginDerived(itemList, this.itemViewList)
+      .withOriginDerived(items.list, this.itemViewList)
       .withMatchOriginDerived(
         (item, itemView) => itemView.item == item )
       .withMapOrigin( (item, tr) => new ItemView(this.ItemViews, item).init(tr) )
@@ -136,16 +136,16 @@ export default class ListView {
       .toChannelTarget(ch.removeItemChannelList)
       .withTransform( (itemViewsPayload) =>
         itemViewsPayload.map( (itemView) =>
-          itemView.createRemoveChannel(itemList) )
+          itemView.createRemoveChannel(items.list) )
       );
 
     ch.defineSimpleChannel()
       .inBackwardDirection()
       .fromSource(this.createItemView.createItemEvt)
-      .toTarget(itemList)
+      .toTarget(items.list)
       .withTransform( (createItemPayload, tr) =>
         createItemPayload
-          .map( () => itemList.createItem().init(tr) )
+          .map( () => items.createItem().init(tr) )
           .toAppendElementAction()
       );
 
