@@ -33,7 +33,7 @@ Transmitter.Transmission.prototype.loggingIsEnabled = false;
 Transmitter.startTransmission( (tr) => {
   days.init(tr);
   intervals.init(tr);
-  daysWithIntervals.createChannel(days).init(tr);
+  daysWithIntervals.createChannel(days, intervals).init(tr);
 
   intervalStorage.createChannel(intervals).init(tr);
   dayStorage.createChannel(days).init(tr);

@@ -38,7 +38,8 @@ export default class DaysWithIntervalsView {
       )
       .withMapOrigin(
         (dayWithIntervals, tr) =>
-          new DayWithIntervalsView(this.DayView, dayWithIntervals).init(tr)
+          new DayWithIntervalsView(this.DayView, this.IntervalView, dayWithIntervals)
+          .init(tr)
       )
       .withMatchOriginDerivedChannel(
         (dayWithIntervals, dayWithIntervalsView, channel) =>
@@ -56,7 +57,8 @@ export default class DaysWithIntervalsView {
 
 class DayWithIntervalsView {
 
-  constructor(DayView, dayWithIntervals) {
+  constructor(DayView, IntervalView, dayWithIntervals) {
+    this.IntervalView = IntervalView;
     this.dayWithIntervals = dayWithIntervals;
 
     const el = this.element = document.createElement('div');
@@ -64,10 +66,24 @@ class DayWithIntervalsView {
 
     this.dayView = DayView.createShow();
     el.appendChild(this.dayView.element);
+
+    this.intervalListEl = el.appendChild(document.createElement('div'));
+    this.intervalListEl.classList.add('intervals-list');
+
+    this.intervalViewList = new Transmitter.Nodes.List();
+    this.intervalElementList =
+      new Transmitter.DOMElement.ChildrenList(this.intervalListEl);
   }
 
   init(tr) {
     this.dayView.init(tr);
+    new Transmitter.Channels.BidirectionalChannel()
+      .inForwardDirection()
+      .withOriginDerived(this.intervalViewList, this.intervalElementList)
+      .withMatchOriginDerived(
+        (itemView, itemEl) => itemView.element == itemEl )
+      .withMapOrigin( (itemView) => itemView.element )
+      .init(tr);
     return this;
   }
 
@@ -76,6 +92,20 @@ class DayWithIntervalsView {
     ch.dayWithIntervals = dayWithIntervals;
     ch.dayWithIntervalsView = this;
     ch.addChannel(this.dayView.createChannel(dayWithIntervals.day));
+
+    ch.defineNestedBidirectionalChannel()
+      .inForwardDirection()
+      .withOriginDerived(dayWithIntervals.intervalList, this.intervalViewList)
+      // .withMatchOriginDerived(
+      //   (item, itemView) => itemView.item == item )
+      .withMapOrigin( (item, tr) => this.IntervalView.createShow(item).init(tr) )
+      // .withMatchOriginDerivedChannel( (item, itemView, channel) =>
+      //   channel.item == item && channel.itemView == itemView
+      // )
+      .withOriginDerivedChannel(
+        (item, itemView) => itemView.createChannel(item)
+      );
+
     return ch;
   }
 
