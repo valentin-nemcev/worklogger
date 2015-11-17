@@ -12,6 +12,22 @@ export function compareDatetimes(a, b) {
   return a.diff(b);
 }
 
+export function minDate(...dates) {
+  let min;
+  for (const date of dates) {
+    if (min == null || date.isBefore(min)) min = date;
+  }
+  return min;
+}
+
+export function maxDate(...dates) {
+  let max;
+  for (const date of dates) {
+    if (max == null || date.isAfter(max)) max = date;
+  }
+  return max;
+}
+
 export function serializeDate(date) {
   return date.format('YYYY-MM-DD');
 }

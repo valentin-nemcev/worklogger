@@ -1,6 +1,8 @@
 // import {inspect} from 'util';
 import * as Transmitter from 'transmitter-framework/index.es';
 
+import {compareDatetimes} from './date_utils';
+
 export default class DaysWithIntervals {
 
   constructor() {
@@ -12,29 +14,34 @@ export default class DaysWithIntervals {
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSource(days.indexedList)
+      .fromSources(days.indexedList, intervals.indexedList)
       .toTarget(this.list)
       .withTransform(
-        (payload) => payload.updateMatching(
-          ({index: dayIndex}) => new DayWithIntervals(dayIndex),
-          ({index: dayIndex}, dayWithIntervals) =>
-            dayWithIntervals.dayIndex == dayIndex
-        )
+        ([daysPayload, intsPayload]) => {
+          const dayIndexes = daysPayload.map( ({index}) => index ).toValue();
+          const intIndexes = intsPayload.map( ({index}) => index ).toValue();
+
+          return dayIndexes.merge(intIndexes)
+            .map( ([days, ints]) => fillRange(days, ints) )
+            .toList().updateMatching(
+              (dayIndex) => new DayWithIntervals(dayIndex),
+              (dayIndex, dayWithIntervals) =>
+                dayWithIntervals.dayIndex == dayIndex
+            );
+        }
       );
 
     const groupedIntervals = new Transmitter.Nodes.List();
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSources(days.indexedList, intervals.indexedList)
+      .fromSources(this.list, intervals.indexedList)
       .toTarget(groupedIntervals)
       .withTransform(
         ([daysPayload, intervalsPayload]) =>
           daysPayload.toValue().merge(intervalsPayload.toValue())
-            .map( ([indexedDays, indexedIntervals]) =>
-              [...groupIntervalsForDays(
-                Array.values(indexedDays), Array.values(indexedIntervals)
-              )]
+            .map( ([daysWithIntervals, indexedIntervals]) =>
+              groupIntervalsForDays(daysWithIntervals, indexedIntervals)
             )
             .toList()
       );
@@ -59,22 +66,46 @@ class DayWithIntervals {
   }
 }
 
-function *groupIntervalsForDays(indexedDays, indexedInts) {
-  for (const {index: dayIndex} of indexedDays) {
+function fillRange(dayIndexes, intIndexes) {
+  const range = [];
+  const endpoints = [
+    dayIndexes[0],
+    intIndexes[0],
+    dayIndexes[dayIndexes.length - 1],
+    intIndexes[intIndexes.length - 1]
+  ].filter( (date) => date != null )
+    .map( (date) => date.clone().startOf('day'))
+    .sort(compareDatetimes);
+
+  if (endpoints.length === 0) return [];
+
+  const start = endpoints[0];
+  const end = endpoints[endpoints.length - 1];
+
+  let current = start;
+  while (!current.isAfter(end)) {
+    range.push(current);
+    current = current.clone().add(1, 'day');
+  }
+  return range;
+}
+
+function groupIntervalsForDays(daysWithIntervals, indexedInts) {
+  let intsI = 0;
+  const result = [];
+  for (const {dayIndex} of daysWithIntervals) {
     const intervals = [];
-    // console.log(inspect({dayIndex}));
-    for (;;) {
-      const {value: intWithIndex, done} = indexedInts.next();
-      const {index: intIndex, item: int} = intWithIndex || {};
-      if (done || dayIndex.isBefore(intIndex, 'day')) {
-        yield intervals;
+    result.push(intervals);
+    while (intsI < indexedInts.length) {
+      const {index: intIndex, item: int} = indexedInts[intsI];
+      if (intIndex.isAfter(dayIndex, 'day')) {
         break;
-      } else if (dayIndex.isSame(intIndex, 'day')) {
+      } else {
         intervals.push(int);
-        continue;
-      } else if (dayIndex.isAfter(intIndex, 'day')) {
+        intsI++;
         continue;
       }
     }
   }
+  return result;
 }
