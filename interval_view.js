@@ -1,5 +1,7 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
+import {formatDatetime, parseDatetime} from './date_utils';
+
 export default {
   createAddActionView(...args) {
     return new CreateIntervalView(...args);
@@ -55,12 +57,12 @@ class IntervalShowView {
     ch.defineBidirectionalChannel()
       .inForwardDirection()
       .withOriginDerived(interval.startValue, this.startElValue)
-      .withMapOrigin(interval.formatDatetime);
+      .withMapOrigin(formatDatetime);
 
     ch.defineBidirectionalChannel()
       .inForwardDirection()
       .withOriginDerived(interval.endValue, this.endElValue)
-      .withMapOrigin(interval.formatDatetime);
+      .withMapOrigin(formatDatetime);
 
     ch.defineBidirectionalChannel()
       .inForwardDirection()
@@ -120,14 +122,14 @@ class IntervalEditView {
 
     ch.defineBidirectionalChannel()
       .withOriginDerived(interval.startValue, this.startElValue)
-      .withMapOrigin(interval.formatDatetime)
-      .withMapDerived(interval.parseDatetime);
+      .withMapOrigin(formatDatetime)
+      .withMapDerived(parseDatetime);
 
 
     ch.defineBidirectionalChannel()
       .withOriginDerived(interval.endValue, this.endElValue)
-      .withMapOrigin(interval.formatDatetime)
-      .withMapDerived(interval.parseDatetime);
+      .withMapOrigin(formatDatetime)
+      .withMapDerived(parseDatetime);
 
     ch.defineBidirectionalChannel()
       .withOriginDerived(interval.tagValue, this.tagElValue);

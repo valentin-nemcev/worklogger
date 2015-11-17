@@ -1,5 +1,7 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
+import {serializeDatetime, unserializeDatetime} from './date_utils';
+
 
 export default {
   createSerializedItemChannel(interval, serializedValue) {
@@ -12,8 +14,8 @@ export default {
       .withTransform( ([payload, ...otherPayloads]) =>
           payload.merge(...otherPayloads).map( ([start, end, tag]) =>
             ({
-              start: interval.serializeDatetime(start),
-              end: interval.serializeDatetime(end),
+              start: serializeDatetime(start),
+              end: serializeDatetime(end),
               tag
             }))
           );
@@ -26,8 +28,8 @@ export default {
           payload.map( (serialized) => {
             const {start, end, tag} = Object(serialized);
             return [
-              interval.unserializeDatetime(start),
-              interval.unserializeDatetime(end),
+              unserializeDatetime(start),
+              unserializeDatetime(end),
               tag
             ];
           }).separate()

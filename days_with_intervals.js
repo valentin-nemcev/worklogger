@@ -1,3 +1,4 @@
+// import {inspect} from 'util';
 import * as Transmitter from 'transmitter-framework/index.es';
 
 export default class DaysWithIntervals {
@@ -15,8 +16,9 @@ export default class DaysWithIntervals {
       .toTarget(this.list)
       .withTransform(
         (payload) => payload.updateMatching(
-          ({item: day}) => new DayWithIntervals(day),
-          ({item: day}, dayWithIntervals) => dayWithIntervals.day == day
+          ({index: dayIndex}) => new DayWithIntervals(dayIndex),
+          ({index: dayIndex}, dayWithIntervals) =>
+            dayWithIntervals.dayIndex == dayIndex
         )
       );
 
@@ -51,8 +53,8 @@ export default class DaysWithIntervals {
 
 
 class DayWithIntervals {
-  constructor(day) {
-    this.day = day;
+  constructor(dayIndex) {
+    this.dayIndex = dayIndex;
     this.intervalList = new Transmitter.Nodes.List();
   }
 }
@@ -60,6 +62,7 @@ class DayWithIntervals {
 function *groupIntervalsForDays(indexedDays, indexedInts) {
   for (const {index: dayIndex} of indexedDays) {
     const intervals = [];
+    // console.log(inspect({dayIndex}));
     for (;;) {
       const {value: intWithIndex, done} = indexedInts.next();
       const {index: intIndex, item: int} = intWithIndex || {};

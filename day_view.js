@@ -1,5 +1,7 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
+import {formatDate, parseDate} from './date_utils';
+
 export default {
   createAddActionView(...args) {
     return new CreateDayView(...args);
@@ -52,7 +54,7 @@ class DayShowView {
     ch.defineBidirectionalChannel()
       .inForwardDirection()
       .withOriginDerived(day.dateValue, this.dateElValue)
-      .withMapOrigin(day.formatDate);
+      .withMapOrigin(formatDate);
 
     ch.defineBidirectionalChannel()
       .inForwardDirection()
@@ -107,8 +109,8 @@ class DayEditView {
 
     ch.defineBidirectionalChannel()
       .withOriginDerived(day.dateValue, this.dateElValue)
-      .withMapOrigin(day.formatDate)
-      .withMapDerived(day.parseDate);
+      .withMapOrigin(formatDate)
+      .withMapDerived(parseDate);
 
     ch.defineBidirectionalChannel()
       .withOriginDerived(day.targetValue, this.targetElValue);

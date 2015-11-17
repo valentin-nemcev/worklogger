@@ -1,5 +1,7 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
+import {formatDate} from './date_utils';
+
 export default class DaysWithIntervalsView {
 
   constructor({DayView, IntervalView}) {
@@ -64,8 +66,11 @@ class DayWithIntervalsView {
     const el = this.element = document.createElement('div');
     el.classList.add('day-with-intervals');
 
-    this.dayView = DayView.createShow();
-    el.appendChild(this.dayView.element);
+    this.dateEl = el.appendChild(document.createElement('strong'));
+    this.dateEl.innerText = formatDate(dayWithIntervals.dayIndex);
+
+    // this.dayView = DayView.createShow();
+    // el.appendChild(this.dayView.element);
 
     this.intervalListEl = el.appendChild(document.createElement('div'));
     this.intervalListEl.classList.add('intervals-list');
@@ -76,7 +81,7 @@ class DayWithIntervalsView {
   }
 
   init(tr) {
-    this.dayView.init(tr);
+    // this.dayView.init(tr);
     new Transmitter.Channels.BidirectionalChannel()
       .inForwardDirection()
       .withOriginDerived(this.intervalViewList, this.intervalElementList)
@@ -91,7 +96,7 @@ class DayWithIntervalsView {
     const ch = new Transmitter.Channels.CompositeChannel();
     ch.dayWithIntervals = dayWithIntervals;
     ch.dayWithIntervalsView = this;
-    ch.addChannel(this.dayView.createChannel(dayWithIntervals.day));
+    // ch.addChannel(this.dayView.createChannel(dayWithIntervals.day));
 
     ch.defineNestedBidirectionalChannel()
       .inForwardDirection()

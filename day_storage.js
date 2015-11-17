@@ -1,5 +1,7 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
+import {serializeDate, unserializeDate} from './date_utils';
+
 
 export default {
   createSerializedItemChannel(day, serializedValue) {
@@ -12,7 +14,7 @@ export default {
       .withTransform( ([payload, ...otherPayloads]) =>
           payload.merge(...otherPayloads).map( ([date, target]) =>
             ({
-              date: day.serializeDate(date),
+              date: serializeDate(date),
               target
             }))
           );
@@ -25,7 +27,7 @@ export default {
           payload.map( (serialized) => {
             const {date, target} = Object(serialized);
             return [
-              day.unserializeDate(date),
+              unserializeDate(date),
               target
             ];
           }).separate()
