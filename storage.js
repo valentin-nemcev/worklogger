@@ -12,7 +12,7 @@ export default class Storage {
   constructor(name, ItemStorage) {
     this.ItemStorage = ItemStorage;
     this.localStorageValue =
-      new Transmitter.Nodes.PropertyValue(window.localStorage, name);
+      new Transmitter.Nodes.PropertyValueNode(window.localStorage, name);
   }
 
   load(tr) {
@@ -22,10 +22,10 @@ export default class Storage {
   createChannel(items) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
-    ch.serializedList = new Transmitter.Nodes.List();
+    ch.serializedMap = new Transmitter.Nodes.OrderedMapNode();
 
     ch.defineBidirectionalChannel()
-      .withOriginDerived(ch.serializedList, this.localStorageValue)
+      .withOriginDerived(ch.serializedMap, this.localStorageValue)
       .withTransformOrigin(
         (payload) => payload.toValue().map(JSON.stringify)
       )
@@ -33,12 +33,12 @@ export default class Storage {
         (payload) => payload.map(parseJSONWithoutThrowing).toList()
       );
 
-    ch.serializedValueList = new Transmitter.Nodes.List();
+    ch.serializedValueMap = new Transmitter.Nodes.OrderedMapNode();
 
     ch.defineSimpleChannel()
       .inBackwardDirection()
-      .fromSource(ch.serializedList)
-      .toTarget(ch.serializedValueList)
+      .fromSource(ch.serializedMap)
+      .toTarget(ch.serializedValueMap)
       .withTransform( (localStoragePayload) =>
         localStoragePayload
           .updateMatching(
@@ -48,11 +48,11 @@ export default class Storage {
       );
 
     ch.defineFlatteningChannel()
-      .withNestedAsOrigin(ch.serializedValueList)
-      .withFlat(ch.serializedList);
+      .withNestedAsOrigin(ch.serializedValueMap)
+      .withFlat(ch.serializedMap);
 
     ch.defineNestedBidirectionalChannel()
-      .withOriginDerived(items.list, ch.serializedValueList)
+      .withOriginDerived(items.map, ch.serializedValueMap)
       .withMatchOriginDerived( (item, serializedValue) =>
           serializedValue.item == item
       )

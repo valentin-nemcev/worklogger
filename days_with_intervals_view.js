@@ -12,9 +12,9 @@ export default class DaysWithIntervalsView {
     this.dayListEl = el.appendChild(document.createElement('div'));
     this.dayListEl.classList.add('days-with-intervals-list');
 
-    this.dayViewList = new Transmitter.Nodes.List();
+    this.dayViewList = new Transmitter.Nodes.ListNode();
     this.dayElementList =
-      new Transmitter.DOMElement.ChildrenList(this.dayListEl);
+      new Transmitter.DOMElement.ChildrenSet(this.dayListEl);
   }
 
   init(tr) {
@@ -75,9 +75,9 @@ class DayWithIntervalsView {
     this.intervalListEl = el.appendChild(document.createElement('div'));
     this.intervalListEl.classList.add('intervals-list');
 
-    this.intervalViewList = new Transmitter.Nodes.List();
+    this.intervalViewList = new Transmitter.Nodes.ListNode();
     this.intervalElementList =
-      new Transmitter.DOMElement.ChildrenList(this.intervalListEl);
+      new Transmitter.DOMElement.ChildrenSet(this.intervalListEl);
   }
 
   init(tr) {

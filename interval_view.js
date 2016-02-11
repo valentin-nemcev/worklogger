@@ -27,6 +27,18 @@ class CreateIntervalView {
     this.createItemEvt =
       new Transmitter.DOMElement.DOMEvent(this.addButtonEl, 'click');
   }
+
+  createCreateChannel(intervals) {
+    return new Transmitter.Channels.SimpleChannel()
+      .inBackwardDirection()
+      .fromSource(this.createItemEvt)
+      .toTarget(intervals.collection)
+      .withTransform( (createItemPayload, tr) =>
+        createItemPayload
+          .map( () => intervals.createItem().init(tr) )
+          .toAppendAction()
+      );
+  }
 }
 
 
@@ -111,7 +123,7 @@ class IntervalEditView {
       .withTransform( (keydownPayload) =>
         keydownPayload
           .map( (keydown) => keydown.key || keydown.keyIdentifier )
-          .noopIf( (key) => key != 'Enter' )
+          .noOpIf( (key) => key != 'Enter' )
       )
       .init(tr);
     return this;
@@ -137,13 +149,13 @@ class IntervalEditView {
     return ch;
   }
 
-  createRemoveChannel(intervalList, interval) {
+  createRemoveChannel(intervalCollection, interval) {
     return new Transmitter.Channels.SimpleChannel()
       .inBackwardDirection()
       .fromSource(this.removeEvt)
-      .toTarget(intervalList)
+      .toTarget(intervalCollection)
       .withTransform( (removePayload) =>
-          removePayload.map( () => interval ).toRemoveElementAction()
+          removePayload.map( () => interval ).toRemoveAction()
       );
   }
 }

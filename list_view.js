@@ -27,7 +27,7 @@ class ItemView {
 
     el.appendChild(this.editView.element);
 
-    this.isEditedValue = new Transmitter.Nodes.Value();
+    this.isEditedValue = new Transmitter.Nodes.ValueNode();
   }
 
   init(tr) {
@@ -80,8 +80,8 @@ class ItemView {
     return ch;
   }
 
-  createRemoveChannel(itemList) {
-    return this.editView.createRemoveChannel(itemList, this.item);
+  createRemoveChannel(itemSet) {
+    return this.editView.createRemoveChannel(itemSet, this.item);
   }
 }
 
@@ -94,9 +94,9 @@ export default class ListView {
     this.itemListEl = el.appendChild(document.createElement('div'));
     this.itemListEl.classList.add('item-list');
 
-    this.itemViewList = new Transmitter.Nodes.List();
-    this.itemElementList =
-      new Transmitter.DOMElement.ChildrenList(this.itemListEl);
+    this.itemViewMap = new Transmitter.Nodes.OrderedMapNode();
+    this.itemElementSet =
+      new Transmitter.DOMElement.ChildrenSet(this.itemListEl);
 
     this.createItemView = ItemViews.createAddActionView();
     el.appendChild(this.createItemView.element);
@@ -105,9 +105,8 @@ export default class ListView {
   init(tr) {
     new Transmitter.Channels.BidirectionalChannel()
       .inForwardDirection()
-      .withOriginDerived(this.itemViewList, this.itemElementList)
-      .withMatchOriginDerived(
-        (itemView, itemEl) => itemView.element == itemEl )
+      .withOriginDerived(this.itemViewMap, this.itemElementSet)
+      .updateSetByValue()
       .withMapOrigin( (itemView) => itemView.element )
       .init(tr);
     return this;
@@ -118,13 +117,9 @@ export default class ListView {
 
     ch.defineNestedBidirectionalChannel()
       .inForwardDirection()
-      .withOriginDerived(items.list, this.itemViewList)
-      .withMatchOriginDerived(
-        (item, itemView) => itemView.item == item )
+      .withOriginDerived(items.collection, this.itemViewMap)
+      .updateMapByValue()
       .withMapOrigin( (item, tr) => new ItemView(this.ItemViews, item).init(tr) )
-      .withMatchOriginDerivedChannel( (item, itemView, channel) =>
-        channel.item == item && channel.itemView == itemView
-      )
       .withOriginDerivedChannel(
         (item, itemView) => itemView.createChannel(item)
       );
@@ -132,22 +127,14 @@ export default class ListView {
     ch.removeItemChannelList = new Transmitter.ChannelNodes.ChannelList();
 
     ch.defineNestedSimpleChannel()
-      .fromSource(this.itemViewList)
+      .fromSource(this.itemViewMap)
       .toChannelTarget(ch.removeItemChannelList)
       .withTransform( (itemViewsPayload) =>
         itemViewsPayload.map( (itemView) =>
-          itemView.createRemoveChannel(items.list) )
+          itemView.createRemoveChannel(items.collection) )
       );
 
-    ch.defineSimpleChannel()
-      .inBackwardDirection()
-      .fromSource(this.createItemView.createItemEvt)
-      .toTarget(items.list)
-      .withTransform( (createItemPayload, tr) =>
-        createItemPayload
-          .map( () => items.createItem().init(tr) )
-          .toAppendElementAction()
-      );
+    ch.addChannel(this.createItemView.createCreateChannel(items));
 
     return ch;
   }

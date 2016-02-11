@@ -30,7 +30,7 @@ export default {
               unserializeDate(date),
               target
             ];
-          }).separate()
+          }).separate(2)
           );
 
     return ch;

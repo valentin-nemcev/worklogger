@@ -6,7 +6,7 @@ import {compareDatetimes} from './date_utils';
 export default class DaysWithIntervals {
 
   constructor() {
-    this.list = new Transmitter.Nodes.List();
+    this.list = new Transmitter.Nodes.ListNode();
   }
 
   createChannel(days, intervals) {
@@ -17,21 +17,21 @@ export default class DaysWithIntervals {
       .fromSources(days.indexedList, intervals.indexedList)
       .toTarget(this.list)
       .withTransform(
-        ([daysPayload, intsPayload]) => {
+        ([daysPayload, intsPayload], tr) => {
           const dayIndexes = daysPayload.map( ({index}) => index ).toValue();
           const intIndexes = intsPayload.map( ({index}) => index ).toValue();
 
           return dayIndexes.merge(intIndexes)
             .map( ([days, ints]) => fillRange(days, ints) )
             .toList().updateMatching(
-              (dayIndex) => new DayWithIntervals(dayIndex),
+              (dayIndex) => new DayWithIntervals(dayIndex).init(tr),
               (dayIndex, dayWithIntervals) =>
                 dayWithIntervals.dayIndex == dayIndex
             );
         }
       );
 
-    const groupedIntervals = new Transmitter.Nodes.List();
+    const groupedIntervals = new Transmitter.Nodes.ListNode();
 
     ch.defineSimpleChannel()
       .inForwardDirection()
@@ -51,7 +51,7 @@ export default class DaysWithIntervals {
       .withFlat(groupedIntervals)
       .withNestedAsDerived(
         this.list,
-        (dayWithIntervals) => dayWithIntervals.intervalList
+        (dayWithIntervals) => dayWithIntervals.intervalsValue
       );
 
     return ch;
@@ -62,7 +62,19 @@ export default class DaysWithIntervals {
 class DayWithIntervals {
   constructor(dayIndex) {
     this.dayIndex = dayIndex;
-    this.intervalList = new Transmitter.Nodes.List();
+    this.intervalsValue = new Transmitter.Nodes.ValueNode();
+    this.intervalList = new Transmitter.Nodes.ListNode();
+  }
+
+  init(tr) {
+    new Transmitter.Channels.SimpleChannel()
+      .inForwardDirection()
+      .fromSource(this.intervalsValue)
+      .toTarget(this.intervalList)
+      .withTransform( (payload) => payload.toList() )
+      .init(tr);
+
+    return this;
   }
 }
 
@@ -73,7 +85,7 @@ function fillRange(dayIndexes, intIndexes) {
     intIndexes[0],
     dayIndexes[dayIndexes.length - 1],
     intIndexes[intIndexes.length - 1]
-  ].filter( (date) => date != null )
+  ].filter( (date) => date != null && date.isValid() )
     .map( (date) => date.clone().startOf('day'))
     .sort(compareDatetimes);
 

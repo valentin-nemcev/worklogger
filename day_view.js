@@ -21,11 +21,33 @@ class CreateDayView {
   constructor() {
     const el = this.element = document.createElement('div');
     el.classList.add('create-day');
+
+    this.dateEl = el.appendChild(document.createElement('input'));
+    this.dateEl.value = '2016-01-01';
+    this.dateEl.type = 'text';
+    this.dateEl.size = '14';
+
+    el.appendChild(document.createTextNode(' '));
+
     this.addButtonEl = el.appendChild(document.createElement('button'));
     this.addButtonEl.innerText = 'Add day';
 
+    this.dateElValue = new Transmitter.DOMElement.InputValue(this.dateEl);
+
     this.createItemEvt =
       new Transmitter.DOMElement.DOMEvent(this.addButtonEl, 'click');
+  }
+
+  createCreateChannel(days) {
+    return new Transmitter.Channels.SimpleChannel()
+      .inBackwardDirection()
+      .fromSources(this.createItemEvt, this.dateElValue)
+      .toTarget(days.collection)
+      .withTransform( ([createItemPayload, datePayload], tr) =>
+        datePayload.replaceByNoOp(createItemPayload)
+          .map( (date) => days.createItem(parseDate(date)).init(tr) )
+          .toSetAtAction( (day) => day.dateIndex )
+      );
   }
 }
 
@@ -38,7 +60,6 @@ class DayShowView {
     el.appendChild(document.createTextNode(' '));
     this.targetEl = el.appendChild(document.createElement('span'));
 
-    this.dateElValue = new Transmitter.DOMElement.TextValue(this.dateEl);
     this.targetElValue = new Transmitter.DOMElement.TextValue(this.targetEl);
 
     this.startEditEvt = new Transmitter.DOMElement.DOMEvent(el, 'dblclick');
@@ -49,12 +70,8 @@ class DayShowView {
   }
 
   createChannel(day) {
+    this.dateEl.innerText = formatDate(day.date);
     const ch = new Transmitter.Channels.CompositeChannel();
-
-    ch.defineBidirectionalChannel()
-      .inForwardDirection()
-      .withOriginDerived(day.dateValue, this.dateElValue)
-      .withMapOrigin(formatDate);
 
     ch.defineBidirectionalChannel()
       .inForwardDirection()
@@ -69,9 +86,7 @@ class DayEditView {
   constructor() {
     const el = this.element = document.createElement('form');
     el.classList.add('edit');
-    this.dateEl = el.appendChild(document.createElement('input'));
-    this.dateEl.type = 'text';
-    this.dateEl.size = '14';
+    this.dateEl = el.appendChild(document.createElement('span'));
     el.appendChild(document.createTextNode(' '));
     this.targetEl = el.appendChild(document.createElement('input'));
     this.targetEl.type = 'text';
@@ -81,7 +96,6 @@ class DayEditView {
     this.removeEl.type = 'button';
     this.removeEl.innerText = '×';
 
-    this.dateElValue = new Transmitter.DOMElement.InputValue(this.dateEl);
     this.targetElValue = new Transmitter.DOMElement.InputValue(this.targetEl);
 
     this.keydownEvt = new Transmitter.DOMElement.DOMEvent(el, 'keydown');
@@ -98,19 +112,16 @@ class DayEditView {
       .withTransform( (keydownPayload) =>
         keydownPayload
           .map( (keydown) => keydown.key || keydown.keyIdentifier )
-          .noopIf( (key) => key != 'Enter' )
+          .noOpIf( (key) => key != 'Enter' )
       )
       .init(tr);
     return this;
   }
 
   createChannel(day) {
-    const ch = new Transmitter.Channels.CompositeChannel();
+    this.dateEl.innerText = formatDate(day.date);
 
-    ch.defineBidirectionalChannel()
-      .withOriginDerived(day.dateValue, this.dateElValue)
-      .withMapOrigin(formatDate)
-      .withMapDerived(parseDate);
+    const ch = new Transmitter.Channels.CompositeChannel();
 
     ch.defineBidirectionalChannel()
       .withOriginDerived(day.targetValue, this.targetElValue);
@@ -123,8 +134,11 @@ class DayEditView {
       .inBackwardDirection()
       .fromSource(this.removeEvt)
       .toTarget(dayList)
-      .withTransform( (removePayload) =>
-          removePayload.map( () => day ).toRemoveElementAction()
+      .withTransform(
+        (removePayload) =>
+          removePayload
+            .map( () => day )
+            .toRemoveAtAction( (day) => day.dateIndex )
       );
   }
 }

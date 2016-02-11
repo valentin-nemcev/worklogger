@@ -32,7 +32,7 @@ export default {
               unserializeDatetime(end),
               tag
             ];
-          }).separate()
+          }).separate(3)
           );
 
     return ch;

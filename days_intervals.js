@@ -1,64 +1,34 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
-import {compareDatetimes, parseDate, parseDatetime} from './date_utils';
+import {
+  formatDateKey,
+  compareDatetimes,
+  parseDatetime
+} from './date_utils';
 
-class IndexedCollection {
+export class Days {
   constructor() {
-
-    this.list = new Transmitter.Nodes.List();
-    this.indexedList = new Transmitter.Nodes.List();
+    this.collection = new Transmitter.Nodes.OrderedMapNode();
   }
 
-  init(tr) {
-    this.createIndexedChannel().init(tr);
+  init() {
     return this;
   }
 
-  createIndexedChannel() {
-    const ch = new Transmitter.Channels.CompositeChannel();
-    const indexList = new Transmitter.Nodes.List();
-
-    ch.defineFlatteningChannel()
-      .inBackwardDirection()
-      .withNestedAsDerived(this.list, (item) => item.getIndex())
-      .withFlat(indexList);
-
-    ch.defineSimpleChannel()
-      .inBackwardDirection()
-      .fromSources(this.list, indexList)
-      .toTarget(this.indexedList)
-      .withTransform(
-        ([listPayload, indexListPayload]) =>
-          listPayload.zip(indexListPayload)
-            .map( ([item, index]) => ({item, index}))
-            .toValue()
-            .map( (indexedItems) =>
-              indexedItems.slice().sort(
-                ({index: indexA, item}, {index: indexB}) =>
-                  item.compareIndexes(indexA, indexB)
-              )
-            )
-      );
-
-    ch.defineSimpleChannel()
-      .inForwardDirection()
-      .fromSource(this.indexedList)
-      .toTarget(this.list)
-      .withTransform(
-        (payload) => payload.map( ({item}) => item )
-      );
-
-    return ch;
+  createItem(date) {
+    return new Day(date);
   }
 }
 
-export class Days extends IndexedCollection {
-  createItem() {
-    return new Day();
+export class Intervals {
+  constructor() {
+    this.collection = new Transmitter.Nodes.OrderedSetNode();
   }
-}
 
-export class Intervals extends IndexedCollection {
+  init() {
+    return this;
+  }
+
   createItem() {
     return new Interval();
   }
@@ -75,23 +45,22 @@ export default class Day {
     return `[Day ${this.debugId}]`;
   }
 
-  constructor() {
+  constructor(date) {
     this.debugId = dayLastDebugId++;
-    this.dateValue = new Transmitter.Nodes.Value();
-    this.targetValue = new Transmitter.Nodes.Value();
+    this.date = date.clone();
+    this.dateIndex = formatDateKey(this.date);
+    this.targetValue = new Transmitter.Nodes.ValueNode();
   }
 
   getIndex() {
-    return this.dateValue;
+    return this.dateIndex;
   }
 
   compareIndexes(a, b) {
     return compareDatetimes(a, b);
   }
 
-  init(tr, {date, target = 0} = {}) {
-    date = parseDate(date);
-    this.dateValue.set(date).init(tr);
+  init(tr, {target = 0} = {}) {
     this.targetValue.set(target).init(tr);
     return this;
   }
@@ -104,9 +73,9 @@ class Interval {
 
   constructor() {
     this.debugId = intervalLastDebugId++;
-    this.startValue = new Transmitter.Nodes.Value();
-    this.endValue = new Transmitter.Nodes.Value();
-    this.tagValue = new Transmitter.Nodes.Value();
+    this.startValue = new Transmitter.Nodes.ValueNode();
+    this.endValue = new Transmitter.Nodes.ValueNode();
+    this.tagValue = new Transmitter.Nodes.ValueNode();
   }
 
   getIndex() {

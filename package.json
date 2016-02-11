@@ -5,7 +5,8 @@
   "description": "Web application to manually log working hours",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node_modules/.bin/webpack-dev-server -dw --inline"
   },
   "repository": {
     "type": "git",
