@@ -1,7 +1,7 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
-// import Storage         from './storage';
-// import DayStorage      from './day_storage';
+import Storage         from './storage';
+import DayStorage      from './day_storage';
 // import IntervalStorage from './interval_storage';
 
 import {Days, Intervals} from './days_intervals';
@@ -18,7 +18,7 @@ const intervals = new Intervals();
 const days = new Days();
 
 // const intervalStorage = new Storage('worklogger-intervals', IntervalStorage);
-// const dayStorage = new Storage('worklogger-days', DayStorage);
+const dayStorage = new Storage('worklogger-days', DayStorage);
 
 // const daysWithIntervals = new DaysWithIntervals();
 
@@ -36,10 +36,10 @@ Transmitter.startTransmission( (tr) => {
   // daysWithIntervals.createChannel(days, intervals).init(tr);
 
   // intervalStorage.createChannel(intervals).init(tr);
-  // dayStorage.createChannel(days).init(tr);
+  dayStorage.createChannel(days).init(tr);
 
   // intervalStorage.load(tr);
-  // dayStorage.load(tr);
+  dayStorage.load(tr);
 
   intervalListView.createChannel(intervals).init(tr);
   dayListView.createChannel(days).init(tr);

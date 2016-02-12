@@ -45,6 +45,10 @@ export function formatDateKey(date) {
   return date.format('YYYY-MM-DD');
 }
 
+export function parseDateKey(dateStr) {
+  return moment(dateStr, 'YYYY-MM-DD');
+}
+
 export function parseDate(dateStr) {
   dateStr = (dateStr || '').trim();
   return dateStr ? moment(dateStr, dateFormat) : moment().startOf('day');

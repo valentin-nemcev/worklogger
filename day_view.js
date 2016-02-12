@@ -124,7 +124,8 @@ class DayEditView {
     const ch = new Transmitter.Channels.CompositeChannel();
 
     ch.defineBidirectionalChannel()
-      .withOriginDerived(day.targetValue, this.targetElValue);
+      .withOriginDerived(day.targetValue, this.targetElValue)
+      .withMapDerived( (str) => parseInt(str, 10) );
 
     return ch;
   }

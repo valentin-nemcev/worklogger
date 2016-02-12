@@ -8,6 +8,10 @@ function parseJSONWithoutThrowing(str) {
   }
 }
 
+function parseJSONArray(str) {
+  return Array.from(parseJSONWithoutThrowing(str) || []);
+}
+
 export default class Storage {
   constructor(name, ItemStorage) {
     this.ItemStorage = ItemStorage;
@@ -27,10 +31,13 @@ export default class Storage {
     ch.defineBidirectionalChannel()
       .withOriginDerived(ch.serializedMap, this.localStorageValue)
       .withTransformOrigin(
-        (payload) => payload.toValue().map(JSON.stringify)
+        (payload) => payload.joinEntries().map(JSON.stringify)
       )
       .withTransformDerived(
-        (payload) => payload.map(parseJSONWithoutThrowing).toList()
+        (payload) => payload
+          .map(parseJSONArray)
+          .splitValues()
+          .valuesToEntries()
       );
 
     ch.serializedValueMap = new Transmitter.Nodes.OrderedMapNode();
@@ -40,11 +47,9 @@ export default class Storage {
       .fromSource(ch.serializedMap)
       .toTarget(ch.serializedValueMap)
       .withTransform( (localStoragePayload) =>
-        localStoragePayload
-          .updateMatching(
-            () => new Transmitter.Nodes.Value(),
-            () => true
-          )
+        localStoragePayload.updateMapByKey(
+          () => new Transmitter.Nodes.ValueNode()
+        )
       );
 
     ch.defineFlatteningChannel()
@@ -52,22 +57,16 @@ export default class Storage {
       .withFlat(ch.serializedMap);
 
     ch.defineNestedBidirectionalChannel()
-      .withOriginDerived(items.map, ch.serializedValueMap)
-      .withMatchOriginDerived( (item, serializedValue) =>
-          serializedValue.item == item
+      .withOriginDerived(items.collection, ch.serializedValueMap)
+      .updateMapByKey()
+      .withMapOrigin( () => new Transmitter.Nodes.ValueNode() )
+      .withMapDerived(
+        (valueNode, key) => this.ItemStorage.createItemByKey(items, key)
       )
-      .withMapOrigin( (item) => {
-        const v = new Transmitter.Nodes.Value();
-        v.item = item;
-        return v;
-      })
-      .withMapDerived( (serializedValue) => {
-        const item = items.createItem();
-        serializedValue.item = item;
-        return item;
-      })
-      .withOriginDerivedChannel( (item, serializedValue) =>
-          this.ItemStorage.createSerializedItemChannel(item, serializedValue));
+      .withOriginDerivedChannel(
+        (item, serializedValue) =>
+          this.ItemStorage.createSerializedItemChannel(item, serializedValue)
+      );
 
     return ch;
   }
