@@ -4,6 +4,9 @@ import {serializeDatetime, unserializeDatetime} from './date_utils';
 
 
 export default {
+  createItemByKey(intervals, uuid) {
+    return intervals.createItem(uuid);
+  },
   createSerializedItemChannel(interval, serializedValue) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
@@ -12,7 +15,7 @@ export default {
       .fromSources(interval.startValue, interval.endValue, interval.tagValue)
       .toTarget(serializedValue)
       .withTransform( ([payload, ...otherPayloads]) =>
-          payload.merge(...otherPayloads).map( ([start, end, tag]) =>
+          payload.zip(...otherPayloads).map( ([start, end, tag]) =>
             ({
               start: serializeDatetime(start),
               end: serializeDatetime(end),
@@ -32,7 +35,7 @@ export default {
               unserializeDatetime(end),
               tag
             ];
-          }).separate(3)
+          }).unzip(3)
           );
 
     return ch;

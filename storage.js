@@ -56,8 +56,26 @@ export default class Storage {
       .withNestedAsOrigin(ch.serializedValueMap)
       .withFlat(ch.serializedMap);
 
+    let collection;
+
+    if (items.collection instanceof Transmitter.Nodes.OrderedMapNode) {
+      collection = items.collection;
+    } else if (items.collection instanceof Transmitter.Nodes.OrderedSetNode) {
+      collection = new Transmitter.Nodes.OrderedMapNode();
+      ch.defineBidirectionalChannel()
+        .withOriginDerived(items.collection, collection)
+        .withTransformOrigin(
+          (itemsPayload) =>
+            itemsPayload.map( (item) => [item.uuid, item] )
+              .valuesToEntries()
+              .updateMapByKey( (item) => item )
+        )
+        .withTransformDerived(
+          (itemsPayload) => itemsPayload.updateSetByValue( (a) => a )
+        );
+    }
     ch.defineNestedBidirectionalChannel()
-      .withOriginDerived(items.collection, ch.serializedValueMap)
+      .withOriginDerived(collection, ch.serializedValueMap)
       .updateMapByKey()
       .withMapOrigin( () => new Transmitter.Nodes.ValueNode() )
       .withMapDerived(

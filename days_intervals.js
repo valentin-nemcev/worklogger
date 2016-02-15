@@ -34,19 +34,18 @@ export class Intervals {
   }
 }
 
-let intervalLastDebugId = 0;
 
-let dayLastDebugId = 0;
-
-
+function genUUID(){
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11)
+    .replace(/[018]/g,a=>(a^Math.random()*16>>a/4).toString(16));
+}
 
 export default class Day {
   inspect() {
-    return `[Day ${this.debugId}]`;
+    return `[Day ${this.dateIndex}]`;
   }
 
   constructor(date) {
-    this.debugId = dayLastDebugId++;
     this.date = date.clone();
     this.dateIndex = formatDateKey(this.date);
     this.targetValue = new Transmitter.Nodes.ValueNode();
@@ -68,11 +67,11 @@ export default class Day {
 
 class Interval {
   inspect() {
-    return `[Interval ${this.debugId}]`;
+    return `[Interval ${this.uuid}]`;
   }
 
-  constructor() {
-    this.debugId = intervalLastDebugId++;
+  constructor(uuid) {
+    this.uuid = uuid || genUUID();
     this.startValue = new Transmitter.Nodes.ValueNode();
     this.endValue = new Transmitter.Nodes.ValueNode();
     this.tagValue = new Transmitter.Nodes.ValueNode();
