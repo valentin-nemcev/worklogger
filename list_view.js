@@ -119,7 +119,9 @@ export default class ListView {
       .inForwardDirection()
       .withOriginDerived(items.collection, this.itemViewMap)
       .updateMapByValue()
-      .withMapOrigin( (item, tr) => new ItemView(this.ItemViews, item).init(tr) )
+      .withMapOrigin(
+        (item, tr) => new ItemView(this.ItemViews, item).init(tr)
+      )
       .withOriginDerivedChannel(
         (item, itemView) => itemView.createChannel(item)
       );

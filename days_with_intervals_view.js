@@ -12,17 +12,16 @@ export default class DaysWithIntervalsView {
     this.dayListEl = el.appendChild(document.createElement('div'));
     this.dayListEl.classList.add('days-with-intervals-list');
 
-    this.dayViewList = new Transmitter.Nodes.ListNode();
-    this.dayElementList =
+    this.dayViewMap = new Transmitter.Nodes.OrderedMapNode();
+    this.dayElementSet =
       new Transmitter.DOMElement.ChildrenSet(this.dayListEl);
   }
 
   init(tr) {
     new Transmitter.Channels.BidirectionalChannel()
       .inForwardDirection()
-      .withOriginDerived(this.dayViewList, this.dayElementList)
-      .withMatchOriginDerived(
-        (dayWithIntervalsView, dayEl) => dayWithIntervalsView.element == dayEl )
+      .withOriginDerived(this.dayViewMap, this.dayElementSet)
+      .updateSetByValue()
       .withMapOrigin( (dayWithIntervalsView) => dayWithIntervalsView.element )
       .init(tr);
     return this;
@@ -33,20 +32,13 @@ export default class DaysWithIntervalsView {
 
     ch.defineNestedBidirectionalChannel()
       .inForwardDirection()
-      .withOriginDerived(daysWithIntervalsList.list, this.dayViewList)
-      .withMatchOriginDerived(
-        (dayWithIntervals, dayWithIntervalsView) =>
-          dayWithIntervalsView.dayWithIntervals == dayWithIntervals
-      )
+      .withOriginDerived(daysWithIntervalsList.collection, this.dayViewMap)
+      .updateMapByValue()
       .withMapOrigin(
         (dayWithIntervals, tr) =>
-          new DayWithIntervalsView(this.DayView, this.IntervalView, dayWithIntervals)
-          .init(tr)
-      )
-      .withMatchOriginDerivedChannel(
-        (dayWithIntervals, dayWithIntervalsView, channel) =>
-          channel.dayWithIntervals == dayWithIntervals
-          && channel.dayWithIntervalsView == dayWithIntervalsView
+          new DayWithIntervalsView(
+            this.DayView, this.IntervalView, dayWithIntervals
+          ).init(tr)
       )
       .withOriginDerivedChannel(
         (dayWithIntervals, dayWithIntervalsView) =>
@@ -75,8 +67,8 @@ class DayWithIntervalsView {
     this.intervalListEl = el.appendChild(document.createElement('div'));
     this.intervalListEl.classList.add('intervals-list');
 
-    this.intervalViewList = new Transmitter.Nodes.ListNode();
-    this.intervalElementList =
+    this.intervalViewMap = new Transmitter.Nodes.OrderedMapNode();
+    this.intervalElementSet =
       new Transmitter.DOMElement.ChildrenSet(this.intervalListEl);
   }
 
@@ -84,9 +76,8 @@ class DayWithIntervalsView {
     // this.dayView.init(tr);
     new Transmitter.Channels.BidirectionalChannel()
       .inForwardDirection()
-      .withOriginDerived(this.intervalViewList, this.intervalElementList)
-      .withMatchOriginDerived(
-        (itemView, itemEl) => itemView.element == itemEl )
+      .withOriginDerived(this.intervalViewMap, this.intervalElementSet)
+      .updateSetByValue()
       .withMapOrigin( (itemView) => itemView.element )
       .init(tr);
     return this;
@@ -100,13 +91,11 @@ class DayWithIntervalsView {
 
     ch.defineNestedBidirectionalChannel()
       .inForwardDirection()
-      .withOriginDerived(dayWithIntervals.intervalList, this.intervalViewList)
-      // .withMatchOriginDerived(
-      //   (item, itemView) => itemView.item == item )
-      .withMapOrigin( (item, tr) => this.IntervalView.createShow(item).init(tr) )
-      // .withMatchOriginDerivedChannel( (item, itemView, channel) =>
-      //   channel.item == item && channel.itemView == itemView
-      // )
+      .withOriginDerived(dayWithIntervals.intervalSet, this.intervalViewMap)
+      .updateMapByValue()
+      .withMapOrigin(
+        (item, tr) => this.IntervalView.createShow(item).init(tr)
+      )
       .withOriginDerivedChannel(
         (item, itemView) => itemView.createChannel(item)
       );

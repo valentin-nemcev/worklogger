@@ -23,14 +23,35 @@ export class Days {
 export class Intervals {
   constructor() {
     this.collection = new Transmitter.Nodes.OrderedSetNode();
+    this.withDays = new Transmitter.Nodes.OrderedMapNode();
   }
 
-  init() {
+  init(tr) {
+    this.createWithDaysChannel().init(tr);
     return this;
   }
 
   createItem() {
     return new Interval();
+  }
+
+  createWithDaysChannel() {
+    const ch = new Transmitter.Channels.CompositeChannel();
+
+    const map = new Transmitter.Nodes.OrderedMapNode();
+
+    ch.defineBidirectionalChannel()
+      .inForwardDirection()
+      .withOriginDerived(this.collection, map)
+      .updateMapByValue()
+      .withMapOrigin( (interval) => interval.startValue );
+
+    ch.defineFlatteningChannel()
+      .inForwardDirection()
+      .withNestedAsOrigin(map)
+      .withFlat(this.withDays);
+
+    return ch;
   }
 }
 

@@ -6,7 +6,7 @@ import {compareDatetimes} from './date_utils';
 export default class DaysWithIntervals {
 
   constructor() {
-    this.list = new Transmitter.Nodes.ListNode();
+    this.collection = new Transmitter.Nodes.OrderedMapNode();
   }
 
   createChannel(days, intervals) {
@@ -14,43 +14,41 @@ export default class DaysWithIntervals {
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSources(days.indexedList, intervals.indexedList)
-      .toTarget(this.list)
+      .fromSources(days.collection, intervals.withDays)
+      .toTarget(this.collection)
       .withTransform(
         ([daysPayload, intsPayload], tr) => {
-          const dayIndexes = daysPayload.map( ({index}) => index ).toValue();
-          const intIndexes = intsPayload.map( ({index}) => index ).toValue();
+          const dayIndexes = daysPayload.map( (day) => day.date ).joinValues();
+          const intIndexes = intsPayload.joinValues();
 
-          return dayIndexes.merge(intIndexes)
+          return dayIndexes.zip(intIndexes)
             .map( ([days, ints]) => fillRange(days, ints) )
-            .toList().updateMatching(
-              (dayIndex) => new DayWithIntervals(dayIndex).init(tr),
-              (dayIndex, dayWithIntervals) =>
-                dayWithIntervals.dayIndex == dayIndex
+            .splitValues().updateMapByValue(
+              (dayIndex) => new DayWithIntervals(dayIndex).init(tr)
             );
         }
       );
 
-    const groupedIntervals = new Transmitter.Nodes.ListNode();
+    const groupedIntervals = new Transmitter.Nodes.OrderedMapNode();
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSources(this.list, intervals.indexedList)
+      .fromSources(this.collection, intervals.withDays)
       .toTarget(groupedIntervals)
       .withTransform(
         ([daysPayload, intervalsPayload]) =>
-          daysPayload.toValue().merge(intervalsPayload.toValue())
+          daysPayload.joinValues().zip(intervalsPayload.joinEntries())
             .map( ([daysWithIntervals, indexedIntervals]) =>
               groupIntervalsForDays(daysWithIntervals, indexedIntervals)
             )
-            .toList()
+            .splitEntries()
       );
 
     ch.defineFlatteningChannel()
       .inForwardDirection()
       .withFlat(groupedIntervals)
       .withNestedAsDerived(
-        this.list,
+        this.collection,
         (dayWithIntervals) => dayWithIntervals.intervalsValue
       );
 
@@ -63,15 +61,17 @@ class DayWithIntervals {
   constructor(dayIndex) {
     this.dayIndex = dayIndex;
     this.intervalsValue = new Transmitter.Nodes.ValueNode();
-    this.intervalList = new Transmitter.Nodes.ListNode();
+    this.intervalSet = new Transmitter.Nodes.OrderedSetNode();
   }
 
   init(tr) {
     new Transmitter.Channels.SimpleChannel()
       .inForwardDirection()
       .fromSource(this.intervalsValue)
-      .toTarget(this.intervalList)
-      .withTransform( (payload) => payload.toList() )
+      .toTarget(this.intervalSet)
+      .withTransform(
+        (payload) => payload.splitValues().updateSetByValue( (i) => i )
+      )
       .init(tr);
 
     return this;
@@ -107,9 +107,9 @@ function groupIntervalsForDays(daysWithIntervals, indexedInts) {
   const result = [];
   for (const {dayIndex} of daysWithIntervals) {
     const intervals = [];
-    result.push(intervals);
+    result.push([dayIndex, intervals]);
     while (intsI < indexedInts.length) {
-      const {index: intIndex, item: int} = indexedInts[intsI];
+      const [int, intIndex] = indexedInts[intsI];
       if (intIndex.isAfter(dayIndex, 'day')) {
         break;
       } else {
