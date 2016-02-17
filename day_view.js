@@ -85,6 +85,7 @@ class DayShowView {
 class DayEditView {
   constructor() {
     const el = this.element = document.createElement('form');
+    el.addEventListener('submit', (ev) => ev.preventDefault() );
     el.classList.add('edit');
     this.dateEl = el.appendChild(document.createElement('span'));
     el.appendChild(document.createTextNode(' '));

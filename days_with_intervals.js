@@ -9,12 +9,12 @@ export default class DaysWithIntervals {
     this.collection = new Transmitter.Nodes.OrderedMapNode();
   }
 
-  createChannel(days, intervals) {
+  createChannel(dayTargets, intervals) {
     const ch = new Transmitter.Channels.CompositeChannel();
 
     ch.defineSimpleChannel()
       .inForwardDirection()
-      .fromSources(days.collection, intervals.withDays)
+      .fromSources(dayTargets.collection, intervals.withDays)
       .toTarget(this.collection)
       .withTransform(
         ([daysPayload, intsPayload], tr) => {
@@ -22,7 +22,7 @@ export default class DaysWithIntervals {
           const intIndexes = intsPayload.joinValues();
 
           return dayIndexes.zip(intIndexes)
-            .map( ([days, ints]) => fillRange(days, ints) )
+            .map( ([dayTargets, ints]) => fillRange(dayTargets, ints) )
             .splitValues().updateMapByValue(
               (dayIndex) => new DayWithIntervals(dayIndex).init(tr)
             );
@@ -38,8 +38,8 @@ export default class DaysWithIntervals {
       .withTransform(
         ([daysPayload, intervalsPayload]) =>
           daysPayload.joinValues().zip(intervalsPayload.joinEntries())
-            .map( ([daysWithIntervals, indexedIntervals]) =>
-              groupIntervalsForDays(daysWithIntervals, indexedIntervals)
+            .map( ([daysWithIntervals, intsWithDays]) =>
+              groupIntervalsForDays(daysWithIntervals, intsWithDays)
             )
             .splitEntries()
       );
@@ -52,6 +52,29 @@ export default class DaysWithIntervals {
         (dayWithIntervals) => dayWithIntervals.intervalsValue
       );
 
+    const groupedDayTargets = new Transmitter.Nodes.OrderedMapNode();
+
+    ch.defineSimpleChannel()
+      .inForwardDirection()
+      .fromSources(this.collection, dayTargets.collection)
+      .toTarget(groupedDayTargets)
+      .withTransform(
+        ([daysPayload, dayTargetsPayload]) =>
+          daysPayload.joinValues().zip(dayTargetsPayload.joinEntries())
+            .map( ([daysWithIntervals, indexedDayTargets]) =>
+              groupDayTargetsForDays(daysWithIntervals, indexedDayTargets)
+            )
+            .splitEntries()
+      );
+
+    ch.defineFlatteningChannel()
+      .inForwardDirection()
+      .withFlat(groupedDayTargets)
+      .withNestedAsDerived(
+        this.collection,
+        (dayWithIntervals) => dayWithIntervals.dayOptional
+      );
+
     return ch;
   }
 }
@@ -62,6 +85,7 @@ class DayWithIntervals {
     this.dayIndex = dayIndex;
     this.intervalsValue = new Transmitter.Nodes.ValueNode();
     this.intervalSet = new Transmitter.Nodes.OrderedSetNode();
+    this.dayOptional = new Transmitter.Nodes.OptionalNode();
   }
 
   init(tr) {
@@ -102,14 +126,14 @@ function fillRange(dayIndexes, intIndexes) {
   return range;
 }
 
-function groupIntervalsForDays(daysWithIntervals, indexedInts) {
+function groupIntervalsForDays(daysWithIntervals, intsWithDays) {
   let intsI = 0;
   const result = [];
   for (const {dayIndex} of daysWithIntervals) {
     const intervals = [];
     result.push([dayIndex, intervals]);
-    while (intsI < indexedInts.length) {
-      const [int, intIndex] = indexedInts[intsI];
+    while (intsI < intsWithDays.length) {
+      const [int, intIndex] = intsWithDays[intsI];
       if (intIndex.isAfter(dayIndex, 'day')) {
         break;
       } else {
@@ -118,6 +142,21 @@ function groupIntervalsForDays(daysWithIntervals, indexedInts) {
         continue;
       }
     }
+  }
+  return result;
+}
+
+function groupDayTargetsForDays(daysWithIntervals, indexedDayTargets) {
+  const result = [];
+  for (const {dayIndex} of daysWithIntervals) {
+    let resultDayTarget = null;
+    for (const [ , dayTarget] of indexedDayTargets) {
+      if (dayTarget.date.isSame(dayIndex, 'day')) {
+        resultDayTarget = dayTarget;
+        break;
+      }
+    }
+    result.push([dayIndex, resultDayTarget]);
   }
   return result;
 }

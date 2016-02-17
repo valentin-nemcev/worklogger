@@ -88,6 +88,7 @@ class IntervalShowView {
 class IntervalEditView {
   constructor() {
     const el = this.element = document.createElement('form');
+    el.addEventListener('submit', (ev) => ev.preventDefault() );
     el.classList.add('edit');
     this.startEl = el.appendChild(document.createElement('input'));
     this.startEl.type = 'text';

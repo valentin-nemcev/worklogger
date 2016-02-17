@@ -53,6 +53,7 @@ class DayWithIntervalsView {
 
   constructor(DayView, IntervalView, dayWithIntervals) {
     this.IntervalView = IntervalView;
+    this.DayView = DayView;
     this.dayWithIntervals = dayWithIntervals;
 
     const el = this.element = document.createElement('div');
@@ -61,11 +62,15 @@ class DayWithIntervalsView {
     this.dateEl = el.appendChild(document.createElement('strong'));
     this.dateEl.innerText = formatDate(dayWithIntervals.dayIndex);
 
-    // this.dayView = DayView.createShow();
-    // el.appendChild(this.dayView.element);
+    this.dayValueEl = el.appendChild(document.createElement('div'));
+    this.dayValueEl.classList.add('day');
 
     this.intervalListEl = el.appendChild(document.createElement('div'));
     this.intervalListEl.classList.add('intervals-list');
+
+    this.dayViewOptional = new Transmitter.Nodes.OptionalNode();
+    this.dayElementSet =
+      new Transmitter.DOMElement.ChildrenSet(this.dayValueEl);
 
     this.intervalViewMap = new Transmitter.Nodes.OrderedMapNode();
     this.intervalElementSet =
@@ -73,7 +78,13 @@ class DayWithIntervalsView {
   }
 
   init(tr) {
-    // this.dayView.init(tr);
+    new Transmitter.Channels.BidirectionalChannel()
+      .inForwardDirection()
+      .withOriginDerived(this.dayViewOptional, this.dayElementSet)
+      .updateSetByValue()
+      .withMapOrigin( (itemView) => itemView.element )
+      .init(tr);
+
     new Transmitter.Channels.BidirectionalChannel()
       .inForwardDirection()
       .withOriginDerived(this.intervalViewMap, this.intervalElementSet)
@@ -87,7 +98,17 @@ class DayWithIntervalsView {
     const ch = new Transmitter.Channels.CompositeChannel();
     ch.dayWithIntervals = dayWithIntervals;
     ch.dayWithIntervalsView = this;
-    // ch.addChannel(this.dayView.createChannel(dayWithIntervals.day));
+
+    ch.defineNestedBidirectionalChannel()
+      .inForwardDirection()
+      .withOriginDerived(dayWithIntervals.dayOptional, this.dayViewOptional)
+      .updateMapByValue()
+      .withMapOrigin(
+        (item, tr) => this.DayView.createShow(item).init(tr)
+      )
+      .withOriginDerivedChannel(
+        (item, itemView) => itemView.createChannel(item)
+      );
 
     ch.defineNestedBidirectionalChannel()
       .inForwardDirection()
@@ -102,5 +123,4 @@ class DayWithIntervalsView {
 
     return ch;
   }
-
 }
