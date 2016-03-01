@@ -1,4 +1,5 @@
 /* global __dirname */
+var path = require('path');
 
 module.exports = {
   entry: './app.js',
@@ -6,6 +7,7 @@ module.exports = {
     path: __dirname,
     filename: 'bundle.js'
   },
+  resolveLoader: { root: path.join(__dirname, 'node_modules') },
   module: {
     loaders: [
       {
@@ -13,8 +15,12 @@ module.exports = {
         exclude: /node_modules\/(?!transmitter-framework)/,
         loader: 'babel-loader',
         query: {
-          optional: ['runtime', 'es7.exportExtensions', 'es7.classProperties'],
-          blacklist: ['es6.forOf', 'regenerator']
+          presets: ['es2015'],
+          plugins: [
+            'transform-runtime',
+            'transform-class-properties',
+            'transform-export-extensions'
+          ]
         }
       }
     ]
