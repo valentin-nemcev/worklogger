@@ -2,6 +2,8 @@ import * as Transmitter from 'transmitter-framework/index.es';
 
 import {formatDate} from './date_utils';
 
+import {ItemView} from './list_view';
+
 export default class DaysWithIntervalsView {
 
   constructor({DayView, IntervalView}) {
@@ -115,7 +117,7 @@ class DayWithIntervalsView {
       .withOriginDerived(dayWithIntervals.intervalSet, this.intervalViewMap)
       .updateMapByValue()
       .withMapOrigin(
-        (item, tr) => this.IntervalView.createShow(item).init(tr)
+        (item, tr) => new ItemView(this.IntervalView, item).init(tr)
       )
       .withOriginDerivedChannel(
         (item, itemView) => itemView.createChannel(item)

@@ -69,5 +69,5 @@ export function formatDatetime(datetime) {
 
 export function parseDatetime(datetimeStr) {
   datetimeStr = (datetimeStr || '').trim();
-  return datetimeStr ? moment(datetimeStr, datetimeFormat) : moment();
+  return datetimeStr ? moment(datetimeStr, datetimeFormat) : null;
 }

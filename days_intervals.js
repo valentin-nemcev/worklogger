@@ -1,10 +1,6 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
-import {
-  formatDateKey,
-  compareDatetimes,
-  parseDatetime
-} from './date_utils';
+import {formatDateKey, parseDatetime} from './date_utils';
 
 export class Days {
   constructor() {
@@ -44,7 +40,7 @@ export class Intervals {
       .inForwardDirection()
       .withOriginDerived(this.collection, map)
       .updateMapByValue()
-      .withMapOrigin( (interval) => interval.startValue );
+      .withMapOrigin( (interval) => interval.dateIndexValue );
 
     ch.defineFlatteningChannel()
       .inForwardDirection()
@@ -72,16 +68,8 @@ export default class Day {
     this.targetValue = new Transmitter.Nodes.ValueNode();
   }
 
-  getIndex() {
-    return this.dateIndex;
-  }
-
-  compareIndexes(a, b) {
-    return compareDatetimes(a, b);
-  }
-
-  init(tr, {target = 0} = {}) {
-    this.targetValue.set(target).init(tr);
+  init(tr, {target} = {}) {
+    if (target != null) this.targetValue.set(target).init(tr);
     return this;
   }
 }
@@ -96,22 +84,24 @@ class Interval {
     this.startValue = new Transmitter.Nodes.ValueNode();
     this.endValue = new Transmitter.Nodes.ValueNode();
     this.tagValue = new Transmitter.Nodes.ValueNode();
-  }
 
-  getIndex() {
-    return this.startValue;
-  }
-
-  compareIndexes(a, b) {
-    return compareDatetimes(a, b);
+    this.dateIndexValue = new Transmitter.Nodes.ValueNode();
   }
 
   init(tr, {start, end, tag = null} = {}) {
     start = parseDatetime(start);
     end = parseDatetime(end);
-    this.startValue.set(start).init(tr);
-    this.endValue.set(end).init(tr);
-    this.tagValue.set(tag).init(tr);
+    if (start) this.startValue.set(start).init(tr);
+    if (end) this.endValue.set(end).init(tr);
+    if (tag) this.tagValue.set(tag).init(tr);
+
+    new Transmitter.Channels.BidirectionalChannel()
+      .inForwardDirection()
+      .withOriginDerived(this.startValue, this.dateIndexValue)
+      .withMapOrigin(formatDateKey)
+      .init(tr);
+
+    // console.log(this.dateIndexValue.get());
     return this;
   }
 }

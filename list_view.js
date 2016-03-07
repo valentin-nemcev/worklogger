@@ -2,7 +2,7 @@ import * as Transmitter from 'transmitter-framework/index.es';
 
 let itemLastDebugId = 0;
 
-class ItemView {
+export class ItemView {
   inspect() {
     return `[ItemView ${this.debugId} for ${this.item.inspect()}]`;
   }

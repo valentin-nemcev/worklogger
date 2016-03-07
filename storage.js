@@ -31,12 +31,12 @@ export default class Storage {
     ch.defineBidirectionalChannel()
       .withOriginDerived(ch.serializedMap, this.localStorageValue)
       .withTransformOrigin(
-        (payload) => payload.joinEntries().map(JSON.stringify)
+        (payload) => payload.collapseEntries().map(JSON.stringify)
       )
       .withTransformDerived(
         (payload) => payload
           .map(parseJSONArray)
-          .splitValues()
+          .expandValues()
           .valuesToEntries()
       );
 
@@ -79,7 +79,8 @@ export default class Storage {
       .updateMapByKey()
       .withMapOrigin( () => new Transmitter.Nodes.ValueNode() )
       .withMapDerived(
-        (valueNode, key) => this.ItemStorage.createItemByKey(items, key)
+        (valueNode, key, tr) =>
+          this.ItemStorage.createItemByKey(items, key).init(tr)
       )
       .withOriginDerivedChannel(
         (item, serializedValue) =>

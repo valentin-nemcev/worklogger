@@ -15,7 +15,7 @@ module.exports = {
         exclude: /node_modules\/(?!transmitter-framework)/,
         loader: 'babel-loader',
         query: {
-          presets: ['es2015'],
+          presets: ['es2015-node5'],
           plugins: [
             'transform-runtime',
             'transform-class-properties',
