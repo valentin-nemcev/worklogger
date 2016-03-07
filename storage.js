@@ -80,7 +80,7 @@ export default class Storage {
       .withMapOrigin( () => new Transmitter.Nodes.ValueNode() )
       .withMapDerived(
         (valueNode, key, tr) =>
-          this.ItemStorage.createItemByKey(items, key).init(tr)
+          this.ItemStorage.createItemByKey(tr, items, key)
       )
       .withOriginDerivedChannel(
         (item, serializedValue) =>

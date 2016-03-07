@@ -4,8 +4,8 @@ import {parseDateKey} from './date_utils';
 
 
 export default {
-  createItemByKey(days, dayStr) {
-    return days.createItem(parseDateKey(dayStr));
+  createItemByKey(tr, days, dayStr) {
+    return days.createItem(tr, parseDateKey(dayStr));
   },
   createSerializedItemChannel(day, serializedValue) {
     const ch = new Transmitter.Channels.CompositeChannel();

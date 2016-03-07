@@ -45,7 +45,9 @@ class CreateDayView {
       .toTarget(days.collection)
       .withTransform( ([createItemPayload, datePayload], tr) =>
         datePayload.replaceByNoOp(createItemPayload)
-          .map( (date) => days.createItem(parseDate(date)).init(tr) )
+          .map(
+            (date) => days.createItemWithDefaultValues(tr, parseDate(date))
+          )
           .toSetAtAction( (day) => day.dateIndex )
       );
   }

@@ -4,8 +4,8 @@ import {serializeDatetime, unserializeDatetime} from './date_utils';
 
 
 export default {
-  createItemByKey(intervals, uuid) {
-    return intervals.createItem(uuid);
+  createItemByKey(tr, intervals, uuid) {
+    return intervals.createItem(tr, uuid);
   },
   createSerializedItemChannel(interval, serializedValue) {
     const ch = new Transmitter.Channels.CompositeChannel();

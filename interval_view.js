@@ -35,7 +35,7 @@ class CreateIntervalView {
       .toTarget(intervals.collection)
       .withTransform( (createItemPayload, tr) =>
         createItemPayload
-          .map( () => intervals.createItem().init(tr) )
+          .map( () => intervals.createItemWithDefaultValues(tr) )
           .toAppendAction()
       );
   }

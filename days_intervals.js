@@ -1,34 +1,37 @@
 import * as Transmitter from 'transmitter-framework/index.es';
 
-import {formatDateKey, parseDatetime} from './date_utils';
+import moment from 'moment';
+import {formatDateKey} from './date_utils';
 
 export class Days {
   constructor() {
     this.collection = new Transmitter.Nodes.OrderedMapNode();
   }
 
-  init() {
-    return this;
+  createItem(tr, date) {
+    return new Day(tr, date);
   }
 
-  createItem(date) {
-    return new Day(date);
+  createItemWithDefaultValues(tr, date) {
+    return new Day(tr, date, {target: 0});
   }
 }
 
 export class Intervals {
-  constructor() {
+  constructor(tr) {
     this.collection = new Transmitter.Nodes.OrderedSetNode();
     this.withDays = new Transmitter.Nodes.OrderedMapNode();
-  }
 
-  init(tr) {
     this.createWithDaysChannel().init(tr);
-    return this;
   }
 
-  createItem() {
-    return new Interval();
+  createItem(tr) {
+    return new Interval(tr);
+  }
+
+  createItemWithDefaultValues(tr) {
+    return new Interval(tr, undefined,
+                        {start: moment(), end: moment(), tag: ''});
   }
 
   createWithDaysChannel() {
@@ -62,14 +65,12 @@ export default class Day {
     return `[Day ${this.dateIndex}]`;
   }
 
-  constructor(date) {
+  constructor(tr, date, values) {
     this.date = date.clone();
     this.dateIndex = formatDateKey(this.date);
     this.targetValue = new Transmitter.Nodes.ValueNode();
-  }
 
-  init(tr, {target} = {}) {
-    if (target != null) this.targetValue.set(target).init(tr);
+    if (values != null) this.targetValue.set(values.target).init(tr);
     return this;
   }
 }
@@ -79,21 +80,13 @@ class Interval {
     return `[Interval ${this.uuid}]`;
   }
 
-  constructor(uuid) {
+  constructor(tr, uuid, values) {
     this.uuid = uuid || genUUID();
     this.startValue = new Transmitter.Nodes.ValueNode();
     this.endValue = new Transmitter.Nodes.ValueNode();
     this.tagValue = new Transmitter.Nodes.ValueNode();
 
     this.dateIndexValue = new Transmitter.Nodes.ValueNode();
-  }
-
-  init(tr, {start, end, tag = null} = {}) {
-    start = parseDatetime(start);
-    end = parseDatetime(end);
-    if (start) this.startValue.set(start).init(tr);
-    if (end) this.endValue.set(end).init(tr);
-    if (tag) this.tagValue.set(tag).init(tr);
 
     new Transmitter.Channels.BidirectionalChannel()
       .inForwardDirection()
@@ -101,7 +94,10 @@ class Interval {
       .withMapOrigin(formatDateKey)
       .init(tr);
 
-    // console.log(this.dateIndexValue.get());
-    return this;
+    if (values != null) {
+      this.startValue.set(values.start).init(tr);
+      this.endValue.set(values.end).init(tr);
+      this.tagValue.set(values.tag).init(tr);
+    }
   }
 }

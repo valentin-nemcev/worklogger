@@ -14,9 +14,6 @@ import DaysWithIntervals from './days_with_intervals';
 import DaysWithIntervalsView from './days_with_intervals_view';
 
 
-const intervals = new Intervals();
-const days = new Days();
-
 const intervalStorage = new Storage('worklogger-intervals', IntervalStorage);
 const dayStorage = new Storage('worklogger-days', DayStorage);
 
@@ -31,8 +28,9 @@ const daysWithIntervalsView =
 Transmitter.Transmission.prototype.loggingIsEnabled = false;
 
 Transmitter.startTransmission( (tr) => {
-  days.init(tr);
-  intervals.init(tr);
+  const intervals = new Intervals(tr);
+  const days = new Days(tr);
+
   daysWithIntervals.createChannel(days, intervals).init(tr);
 
   intervalStorage.createChannel(intervals).init(tr);
