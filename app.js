@@ -39,13 +39,13 @@ Transmitter.startTransmission( (tr) => {
   intervalStorage.load(tr);
   dayStorage.load(tr);
 
-  intervalListView.createChannel(intervals).init(tr);
-  dayListView.createChannel(days).init(tr);
-  daysWithIntervalsView.createChannel(daysWithIntervals).init(tr);
+  intervalListView.createChannel(intervals).init(tr, true);
+  // dayListView.createChannel(days).init(tr);
+  // daysWithIntervalsView.createChannel(daysWithIntervals).init(tr);
 
   intervalListView.init(tr);
-  dayListView.init(tr);
-  daysWithIntervalsView.init(tr);
+  // dayListView.init(tr);
+  // daysWithIntervalsView.init(tr);
 });
 
 

@@ -20,6 +20,8 @@ export class Days {
 export class Intervals {
   constructor(tr) {
     this.collection = new Transmitter.Nodes.OrderedSetNode();
+    this.collection.debugTrace = true;
+    this.collection.inspect = () => 'intervals.collection';
     this.withDays = new Transmitter.Nodes.OrderedMapNode();
 
     this.createWithDaysChannel().init(tr);

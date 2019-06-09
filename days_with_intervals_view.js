@@ -123,6 +123,17 @@ class DayWithIntervalsView {
         (item, itemView) => itemView.createChannel(item)
       );
 
+    // ch.removeItemChannelList = new Transmitter.ChannelNodes.ChannelList();
+
+    // ch.defineNestedSimpleChannel()
+    //   .fromSource(this.intervalViewMap)
+    //   .toChannelTarget(ch.removeItemChannelList)
+    //   .withTransform( (itemViewsPayload) =>
+    //     itemViewsPayload.map( (itemView) =>
+    //       itemView.createRemoveChannel(dayWithIntervals.intervalSet) )
+    //   );
+
+
     return ch;
   }
 }

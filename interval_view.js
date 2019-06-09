@@ -26,6 +26,7 @@ class CreateIntervalView {
 
     this.createItemEvt =
       new Transmitter.DOMElement.DOMEvent(this.addButtonEl, 'click');
+    this.createItemEvt.inspect = () => 'createItemEvt';
   }
 
   createCreateChannel(intervals) {

@@ -43,6 +43,14 @@ export default class DaysWithIntervals {
       );
 
     ch.defineFlatteningChannel()
+      .inBackwardDirection()
+      .withFlat(intervals.collection)
+      .withNestedAsDerived(
+        this.collection,
+        (dayWithIntervals) => dayWithIntervals.intervalSet
+      );
+
+    ch.defineFlatteningChannel()
       .inForwardDirection()
       .withTransformFlat(
         (payload) => payload.map( (d) => [d]).unflattenToSequences()
